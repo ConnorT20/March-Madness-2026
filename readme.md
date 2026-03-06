@@ -47,149 +47,6 @@ ls("package:hoopR") |> grep("espn_mbb_", x = _, value = TRUE)
     [17] "helper_espn_mbb_team_box"  
 
 ``` r
-tictoc::tic()
-progressr::with_progress({
-  mbb_pbp <-  hoopR::load_mbb_pbp()
-})
-tictoc::toc()
-```
-
-    21.127 sec elapsed
-
-``` r
-summary(mbb_pbp)
-```
-
-     game_play_number       id            sequence_number        type_id     
-     Min.   :  1.0    Min.   :4.018e+17   Min.   :113523368   Min.   : 91.0  
-     1st Qu.:117.0    1st Qu.:4.018e+17   1st Qu.:115082688   1st Qu.:558.0  
-     Median :233.0    Median :4.018e+17   Median :116710488   Median :584.0  
-     Mean   :236.4    Mean   :4.018e+17   Mean   :116708706   Mean   :568.4  
-     3rd Qu.:350.0    3rd Qu.:4.018e+17   3rd Qu.:118296873   3rd Qu.:586.0  
-     Max.   :833.0    Max.   :4.019e+17   Max.   :119890132   Max.   :618.0  
-                                                                             
-      type_text             text             away_score       home_score    
-     Length:2693417     Length:2693417     Min.   :  0.00   Min.   :  0.00  
-     Class :character   Class :character   1st Qu.: 16.00   1st Qu.: 19.00  
-     Mode  :character   Mode  :character   Median : 34.00   Median : 39.00  
-                                           Mean   : 35.25   Mean   : 40.19  
-                                           3rd Qu.: 52.00   3rd Qu.: 59.00  
-                                           Max.   :119.00   Max.   :149.00  
-                                                                            
-     period_number  period_display_value clock_display_value scoring_play   
-     Min.   :1.00   Length:2693417       Length:2693417      Mode :logical  
-     1st Qu.:1.00   Class :character     Class :character    FALSE:2220110  
-     Median :2.00   Mode  :character     Mode  :character    TRUE :473307   
-     Mean   :1.53                                                           
-     3rd Qu.:2.00                                                           
-     Max.   :5.00                                                           
-                                                                            
-      score_value      wallclock         shooting_play   coordinate_x_raw    
-     Min.   :0.0000   Length:2693417     Mode :logical   Min.   :-214748340  
-     1st Qu.:0.0000   Class :character   FALSE:1779063   1st Qu.:        25  
-     Median :0.0000   Mode  :character   TRUE :914354    Median :        25  
-     Mean   :0.6922                                      Mean   :  -1143793  
-     3rd Qu.:2.0000                                      3rd Qu.:        25  
-     Max.   :3.0000                                      Max.   :        50  
-                                                                             
-     coordinate_y_raw     points_attempted short_description     game_id         
-     Min.   :-214748365   Min.   :0.0000   Length:2693417     Min.   :401804830  
-     1st Qu.:         0   1st Qu.:0.0000   Class :character   1st Qu.:401812611  
-     Median :         0   Median :0.0000   Mode  :character   Median :401822773  
-     Mean   :  -1143810   Mean   :0.6867                      Mean   :401820285  
-     3rd Qu.:         4   3rd Qu.:2.0000                      3rd Qu.:401827007  
-     Max.   :        89   Max.   :3.0000                      Max.   :401861277  
-                                                                                 
-         season      season_type  home_team_id    home_team_name    
-     Min.   :2026   Min.   :2    Min.   :     2   Length:2693417    
-     1st Qu.:2026   1st Qu.:2    1st Qu.:   172   Class :character  
-     Median :2026   Median :2    Median :  2026   Mode  :character  
-     Mean   :2026   Mean   :2    Mean   :  1570                     
-     3rd Qu.:2026   3rd Qu.:2    3rd Qu.:  2453                     
-     Max.   :2026   Max.   :2    Max.   :112358                     
-                                                                    
-     home_team_mascot   home_team_abbrev   home_team_name_alt  away_team_id   
-     Length:2693417     Length:2693417     Length:2693417     Min.   :     1  
-     Class :character   Class :character   Class :character   1st Qu.:   233  
-     Mode  :character   Mode  :character   Mode  :character   Median :  2168  
-                                                              Mean   :  4694  
-                                                              3rd Qu.:  2529  
-                                                              Max.   :132013  
-                                                                              
-     away_team_name     away_team_mascot   away_team_abbrev   away_team_name_alt
-     Length:2693417     Length:2693417     Length:2693417     Length:2693417    
-     Class :character   Class :character   Class :character   Class :character  
-     Mode  :character   Mode  :character   Mode  :character   Mode  :character  
-                                                                                
-                                                                                
-                                                                                
-                                                                                
-      game_spread  home_favorite  game_spread_available home_team_spread
-     Min.   :2.5   Mode:logical   Mode :logical         Min.   :2.5     
-     1st Qu.:2.5   TRUE:2693417   FALSE:2693417         1st Qu.:2.5     
-     Median :2.5                                        Median :2.5     
-     Mean   :2.5                                        Mean   :2.5     
-     3rd Qu.:2.5                                        3rd Qu.:2.5     
-     Max.   :2.5                                        Max.   :2.5     
-                                                                        
-          half          time           clock_minutes    clock_seconds 
-     Min.   :1.00   Length:2693417     Min.   : 0.000   Min.   : 0.0  
-     1st Qu.:1.00   Class :character   1st Qu.: 4.000   1st Qu.:13.0  
-     Median :2.00   Mode  :character   Median : 9.000   Median :29.0  
-     Mean   :1.53                      Mean   : 8.967   Mean   :28.6  
-     3rd Qu.:2.00                      3rd Qu.:14.000   3rd Qu.:44.0  
-     Max.   :5.00                      Max.   :20.000   Max.   :59.0  
-                                                                      
-     home_timeout_called away_timeout_called  lead_period      lead_half    
-     Mode :logical       Mode :logical       Min.   :1.000   Min.   :1.000  
-     FALSE:2681748       FALSE:2680476       1st Qu.:1.000   1st Qu.:1.000  
-     TRUE :11669         TRUE :12941         Median :2.000   Median :2.000  
-                                             Mean   :1.532   Mean   :1.532  
-                                             3rd Qu.:2.000   3rd Qu.:2.000  
-                                             Max.   :5.000   Max.   :5.000  
-                                             NA's   :5784    NA's   :5784   
-     start_period_seconds_remaining start_game_seconds_remaining
-     Min.   :   0.0                 Min.   :   0                
-     1st Qu.: 262.0                 1st Qu.: 534                
-     Median : 563.0                 Median :1170                
-     Mean   : 566.6                 Mean   :1141                
-     3rd Qu.: 858.0                 3rd Qu.:1741                
-     Max.   :1206.0                 Max.   :2406                
-                                                                
-     end_period_seconds_remaining end_game_seconds_remaining    team_id      
-     Min.   :   0.0               Min.   :   0               Min.   :     1  
-     1st Qu.: 261.0               1st Qu.: 533               1st Qu.:   201  
-     Median : 562.0               Median :1165               Median :  2097  
-     Mean   : 565.3               Mean   :1139               Mean   :  2994  
-     3rd Qu.: 856.0               3rd Qu.:1737               3rd Qu.:  2501  
-     Max.   :1200.0               Max.   :2400               Max.   :132013  
-     NA's   :5783                 NA's   :5783               NA's   :71336   
-      athlete_id_1       lag_period       lag_half      athlete_id_2    
-     Min.   :    179   Min.   :1.000   Min.   :1.000   Min.   :  18553  
-     1st Qu.:5105689   1st Qu.:1.000   1st Qu.:1.000   1st Qu.:5105598  
-     Median :5176275   Median :2.000   Median :2.000   Median :5176029  
-     Mean   :5125967   Mean   :1.529   Mean   :1.529   Mean   :5119826  
-     3rd Qu.:5243006   3rd Qu.:2.000   3rd Qu.:2.000   3rd Qu.:5242555  
-     Max.   :5335077   Max.   :5.000   Max.   :5.000   Max.   :5332823  
-     NA's   :186324    NA's   :5784    NA's   :5784    NA's   :2535820  
-      coordinate_x         coordinate_y          game_date         
-     Min.   :-214748407   Min.   :-214748365   Min.   :2025-11-03  
-     1st Qu.:       -42   1st Qu.:         0   1st Qu.:2025-11-27  
-     Median :       -13   Median :         0   Median :2026-01-03  
-     Mean   :    -20092   Mean   :    -20092   Mean   :2025-12-31  
-     3rd Qu.:        42   3rd Qu.:         0   3rd Qu.:2026-02-01  
-     Max.   : 214748407   Max.   : 214748365   Max.   :2026-03-04  
-                                                                   
-     game_date_time               
-     Min.   :2025-11-03 08:00:00  
-     1st Qu.:2025-11-27 12:00:00  
-     Median :2026-01-03 13:00:00  
-     Mean   :2026-01-01 01:20:44  
-     3rd Qu.:2026-02-01 13:00:00  
-     Max.   :2026-03-04 22:30:00  
-                                  
-
-``` r
 mbb_schedule_25 <- load_mbb_schedule(2025)
 team_box_2k25 <- load_mbb_team_box(2025)
 player_box_2k25 <- load_mbb_player_box(2025)
@@ -219,7 +76,7 @@ summary(mbb_2025$period_number)
       1.000   1.000   2.000   1.537   2.000   6.000 
 
 ``` r
-save(mbb_pbp, player_box_2k25, rankings, standings_2k25, team_box_2k25, mbb_schedule_25, mbb_2025, file = "mbb_data.rda")
+save(player_box_2k25, rankings, standings_2k25, team_box_2k25, mbb_schedule_25, mbb_2025, file = "mbb_data.rda")
 ```
 
 Flip data frame on itself to get most recent game instead of the first
@@ -239,6 +96,9 @@ ot_games <- unique(clean_mbb_25[which(clean_mbb_25$period_number > 2), c("game_i
 games_1$home_win[which(games_1$game_id %in% ot_games)] <- 0.5
 ```
 
+Get the ELOs from 2025 to use as a baseline to make ELO ratings for the
+preseason of 2026 and build out the 2026 regular season
+
 ``` r
 elo_2025 <- elo.run(
   home_win ~ home_team_name + away_team_name, 
@@ -254,6 +114,8 @@ priors_2026 <- (final_2025_elos * 0.75) + (1500 * 0.25) #New Season; different s
 
 view(priors_2026)
 ```
+
+Complete the same process for 2026
 
 ``` r
 mbb_2026 <- load_mbb_pbp(2026)
@@ -313,7 +175,7 @@ head(teams_26)
     #   logos_href_9 <chr>, logos_href_10 <chr>, logos_href_11 <chr>,
     #   logos_href_12 <chr>, logos_href_13 <chr>, logos_href_14 <chr>
 
-get unique column value for display names, upload it to a CSV and then
+Get unique column value for display names, upload it to a CSV and then
 use AI to populate with conferences, then load back in.
 
 ``` r
@@ -808,7 +670,7 @@ g_1 <- ggplot(merged_mbb_clean,
 g_1
 ```
 
-![](readme_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
+![](readme_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
 ``` r
 MAAC_Conference <- merged_mbb_clean %>% 
@@ -835,7 +697,7 @@ g_2_MAAC <- ggplot(MAAC_Conference,
 g_2_MAAC
 ```
 
-![](readme_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
+![](readme_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
 
 ``` r
 ACC_Conference <- merged_mbb_clean %>% 
@@ -862,7 +724,7 @@ g_3_ACC <- ggplot(ACC_Conference,
 g_3_ACC
 ```
 
-![](readme_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+![](readme_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
 
 ``` r
 B1G_Conference <- merged_mbb_clean %>% 
@@ -889,7 +751,7 @@ g_4_B1G <- ggplot(B1G_Conference,
 g_4_B1G
 ```
 
-![](readme_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
+![](readme_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
 
 ``` r
 A10_Conference <- merged_mbb_clean %>% 
@@ -916,9 +778,12 @@ g_5_A10 <- ggplot(A10_Conference,
 g_5_A10
 ```
 
-![](readme_files/figure-gfm/unnamed-chunk-29-1.png)<!-- --> WORK WITH
-MAAC CONFERENCE Testing out probability of win Creating a remaining
-schedule for the MAAC teams based on the Schedule_26 DataFrame
+![](readme_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+
+WORK WITH MAAC CONFERENCE Testing out probability of win Creating a
+remaining schedule for the MAAC teams based on the Schedule_26 DataFrame
+(If this goes well I will build things out for the other conferences I
+am interested in)
 
 ``` r
 # Win Probability of Siena against Saint Peter's example
@@ -1059,7 +924,8 @@ MAAC_remaining_schedule$home_prob <- elo.prob(
 )
 ```
 
-Running code similar to what we did for our elo_world_cup.rmd
+Running code similar to what we did for the elo_world_cup.rmd in Sports
+Analytics with Martin
 
 ``` r
 set.seed(33) 
@@ -1119,6 +985,10 @@ MAAC_remaining_schedule$away_elo_before <- NA
 K <- 30
 set.seed(33)
 ```
+
+Predict the winning games of the remaining schedule in the regular
+season (Games remaining will go down the more that the season gets
+towards the end and get ready for the conference tourneys)
 
 ``` r
 for(i in 1:nrow(MAAC_remaining_schedule)) {
@@ -1822,6 +1692,9 @@ save(espn_mbb_pbp, temp_1, temp_2, games_1, games_2, mbb_2026, mbb_2025, df_elo_
 
 BUILD OUT THE TOURNAMENT FIELD WORK WITH MARTIN FOR MORE ACCURATE ELOs
 
+Here I used NCAA rankings from the preseason to add extra points to the
+top 25 preseason teams
+
 ``` r
  ranking_data <- data.frame(
   Rank = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25),
@@ -1869,6 +1742,12 @@ print(ranking_data)
     23   23      Creighton   79.0
     24   24      Wisconsin   68.0
     25   25 North Carolina   52.0
+
+Below I am building out the weights for ELOs based on each conference.
+The more competitive conferences are going to be rewarded more as they
+are playing a more difficult schdule with more high end talent. Each
+conference has its own unique id so each on needs its own line of code
+to receive its proper k value weighting
 
 ``` r
 season_games <- load_mbb_schedule(2026) %>%
@@ -1982,7 +1861,7 @@ head(projected_standings)
     356     2072.666 Michigan
 
 Build out the different conference tournaments. Most tournaments follow
-one of three types of sturcutes which is reflected in the code chunk
+one of four types of structures which is reflected in the code chunk
 below with examples for each.
 
 ``` r
@@ -2003,7 +1882,6 @@ sim_game <- function(t_a, t_b, conf_data) {
                    conf_data$elo_rating[conf_data$team == t_b])
   ifelse(runif(1) < prob, t_a, t_b)
 }
-
 
 # --- THE 4 Tournament Structures for 2026 ---
 
@@ -2122,7 +2000,6 @@ sim_stepladder_tourney <- function(conf_data) {
   return(list(Round_1 = c(r1_1, r1_2), Quarterfinals = c(qf_1, qf_2), Semifinals = c(sf_1, sf_2), Champion = champ))
 }
 
-
 # --- RUN TOURNAMENT SIMULATIONS ---
 
 conf_split <- split(final_standings_conf, final_standings_conf$conference_2025_26)
@@ -2188,6 +2065,12 @@ ff_w4 <- play_playin(at_large_playin[3,], at_large_playin[4,])
 
 final_64_unranked <- bind_rows(auto_locks, at_large_locks, ff_w1, ff_w2, ff_w3, ff_w4)
 ```
+
+Below is the code for the initial simulation of the NCAA Tournament. It
+includes the top 64 teams, assigns them to their region (East, West,
+South, Midwest), sets the matchups for the tournament and then will
+simulate each round and predicts each winner of the games until the end
+of the tournament and presents the winner.
 
 ``` r
 top_64 <- final_64_unranked %>%
@@ -2802,8 +2685,12 @@ ggplot(head(champ_prob, 10), aes(x = reorder(team, probability), y = probability
   )
 ```
 
-![](readme_files/figure-gfm/unnamed-chunk-67-1.png)<!-- -->
+![](readme_files/figure-gfm/unnamed-chunk-65-1.png)<!-- -->
 
 ``` r
 save(espn_mbb_pbp, temp_1, temp_2, games_1, games_2, mbb_2026, mbb_2025, df_elo_25, df_elo_26, conferences_26_clean, schedule_26, ACC_Conference, ACC_final_simulated_elos, ACC_remaining_schedule, A10_Conference, A10_final_simulated_elos, A10_remaining_schedule, B1G_Conference, B1G_final_simulated_elos, B1G_remaining_schedule, MAAC_Conference, MAAC_remaining_schedule, merged_mbb_clean, r64_matchups, season_games, projected_standings, final_elos, ranking_data, tourney_field, team_db_sim, results_list_df, champ_counts, champ_prob, file = "mbb_data_4.rda")
+```
+
+``` r
+save(espn_mbb_pbp, temp_1, temp_2, games_1, games_2, mbb_2026, mbb_2025, df_elo_25, df_elo_26, conferences_26_clean, schedule_26, ACC_Conference, ACC_final_simulated_elos, ACC_remaining_schedule, A10_Conference, A10_final_simulated_elos, A10_remaining_schedule, B1G_Conference, B1G_final_simulated_elos, B1G_remaining_schedule, MAAC_Conference, MAAC_remaining_schedule, merged_mbb_clean, r64_matchups, season_games, projected_standings, final_elos, ranking_data, tourney_field, team_db_sim, results_list_df, champ_counts, champ_prob, final_64_unranked, conf_split, auto_playin, auto_locks, auto_bid_df, auto_bids, ff_w4, ff_w3, ff_w2, ff_w1, at_large_playin, at_large_locks, at_large_df, all_tourney_results, sim_stepladder_tourney, sim_power_tourney, sim_single_bye_tourney, sim_traditional_tourney, file = "mbb_data_5.rda")
 ```

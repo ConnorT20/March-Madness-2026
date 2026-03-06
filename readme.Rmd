@@ -29,18 +29,6 @@ ls("package:hoopR") |> grep("espn_mbb_", x = _, value = TRUE)
 
 
 ```{r}
-tictoc::tic()
-progressr::with_progress({
-  mbb_pbp <-  hoopR::load_mbb_pbp()
-})
-tictoc::toc()
-```
-
-```{r}
-summary(mbb_pbp)
-```
-
-```{r}
 mbb_schedule_25 <- load_mbb_schedule(2025)
 team_box_2k25 <- load_mbb_team_box(2025)
 player_box_2k25 <- load_mbb_player_box(2025)
@@ -48,7 +36,6 @@ rankings <- espn_mbb_rankings()
 standings_2k25 <- espn_mbb_standings(2025)
 
 ```
-
 
 Game Results 
 
@@ -67,7 +54,7 @@ summary(mbb_2025$period_number)
 ```
 
 ```{r}
-save(mbb_pbp, player_box_2k25, rankings, standings_2k25, team_box_2k25, mbb_schedule_25, mbb_2025, file = "mbb_data.rda")
+save(player_box_2k25, rankings, standings_2k25, team_box_2k25, mbb_schedule_25, mbb_2025, file = "mbb_data.rda")
 ```
 
 Flip data frame on itself to get most recent game instead of the first game to get more accurate ELO
@@ -86,6 +73,7 @@ ot_games <- unique(clean_mbb_25[which(clean_mbb_25$period_number > 2), c("game_i
 games_1$home_win[which(games_1$game_id %in% ot_games)] <- 0.5
 ```
 
+Get the ELOs from 2025 to use as a baseline to make ELO ratings for the preseason of 2026 and build out the 2026 regular season
 
 ```{r}
 elo_2025 <- elo.run(
@@ -103,7 +91,7 @@ priors_2026 <- (final_2025_elos * 0.75) + (1500 * 0.25) #New Season; different s
 view(priors_2026)
 ```
 
-
+Complete the same process for 2026
 
 ```{r}
 mbb_2026 <- load_mbb_pbp(2026)
@@ -140,14 +128,14 @@ df_elo_26 <- as.data.frame(final.elos(elo_2026))
 df_elo_25 <- as.data.frame(final.elos(elo_2025))
 ```
 
-
 Keep for later to look at teams for graphing
 
 ```{r}
 teams_26 <- espn_mbb_teams(2026) 
 head(teams_26)
 ```
-get unique column value for display names, upload it to a CSV and then use AI to populate with conferences, then load back in. 
+
+Get unique column value for display names, upload it to a CSV and then use AI to populate with conferences, then load back in. 
 
 ```{r}
 unique_teams <- unique(teams_26$display_name)
@@ -317,9 +305,11 @@ g_5_A10 <- ggplot(A10_Conference,
 
 g_5_A10
 ```
+
 WORK WITH MAAC CONFERENCE
 Testing out probability of win 
 Creating a remaining schedule for the MAAC teams based on the Schedule_26 DataFrame
+(If this goes well I will build things out for the other conferences I am interested in)
 
 ```{r}
 # Win Probability of Siena against Saint Peter's example
@@ -376,6 +366,7 @@ colnames(MAAC_remaining_schedule)[colnames(MAAC_remaining_schedule) == "elo_rati
 
 MAAC_remaining_schedule
 ```
+
 Adding in the home team elos in the code above. This will help to build out the remaining schedule and then to build the game predictions/outcomes.
 
 ```{r}
@@ -390,6 +381,7 @@ colnames(MAAC_remaining_schedule)[colnames(MAAC_remaining_schedule) == "elo_rati
 
 MAAC_remaining_schedule
 ```
+
 Getting the win probability and then adding some points to the elo for home court advantage
 
 ```{r}
@@ -399,7 +391,7 @@ MAAC_remaining_schedule$home_prob <- elo.prob(
 )
 ```
 
-Running code similar to what we did for our elo_world_cup.rmd 
+Running code similar to what we did for the elo_world_cup.rmd in Sports Analytics with Martin
 
 ```{r}
 set.seed(33) 
@@ -417,6 +409,7 @@ MAAC_remaining_schedule$predicted_winner <- ifelse(
 # View the results
 head(MAAC_remaining_schedule)
 ```
+
 Here I am looking at the predicted winners of the remaining MAAC Schedule and how many games these teams are going to win.
 
 ```{r}
@@ -442,6 +435,8 @@ MAAC_remaining_schedule$away_elo_before <- NA
 K <- 30
 set.seed(33)
 ```
+
+Predict the winning games of the remaining schedule in the regular season (Games remaining will go down the more that the season gets towards the end and get ready for the conference tourneys)
 
 ```{r}
 for(i in 1:nrow(MAAC_remaining_schedule)) {
@@ -652,6 +647,7 @@ A10_final_simulated_elos <- data.frame(
 head(A10_final_simulated_elos)
 head(A10_remaining_schedule)
 ```
+
 Big Ten Conference Sims 
 
 ```{r}
@@ -948,6 +944,7 @@ save(espn_mbb_pbp, temp_1, temp_2, games_1, games_2, mbb_2026, mbb_2025, df_elo_
 BUILD OUT THE TOURNAMENT FIELD
 WORK WITH MARTIN FOR MORE ACCURATE ELOs
 
+Here I used NCAA rankings from the preseason to add extra points to the top 25 preseason teams
 
 ```{r}
  ranking_data <- data.frame(
@@ -970,6 +967,7 @@ WORK WITH MARTIN FOR MORE ACCURATE ELOs
 print(ranking_data)
 ```
 
+Below I am building out the weights for ELOs based on each conference. The more competitive conferences are going to be rewarded more as they are playing a more difficult schdule with more high end talent. Each conference has its own unique id so each on needs its own line of code to receive its proper k value weighting
 
 ```{r}
 
@@ -1068,7 +1066,8 @@ projected_standings <- projected_standings[order(projected_standings$team_elo_re
 
 head(projected_standings)
 ```
-Build out the different conference tournaments. Most tournaments follow one of three types of sturcutes which is reflected in the code chunk below with examples for each.
+
+Build out the different conference tournaments. Most tournaments follow one of four types of structures which is reflected in the code chunk below with examples for each.
 
 ```{r}
 # --- PREP CONFERENCE DATA ---
@@ -1088,7 +1087,6 @@ sim_game <- function(t_a, t_b, conf_data) {
                    conf_data$elo_rating[conf_data$team == t_b])
   ifelse(runif(1) < prob, t_a, t_b)
 }
-
 
 # --- THE 4 Tournament Structures for 2026 ---
 
@@ -1207,7 +1205,6 @@ sim_stepladder_tourney <- function(conf_data) {
   return(list(Round_1 = c(r1_1, r1_2), Quarterfinals = c(qf_1, qf_2), Semifinals = c(sf_1, sf_2), Champion = champ))
 }
 
-
 # --- RUN TOURNAMENT SIMULATIONS ---
 
 conf_split <- split(final_standings_conf, final_standings_conf$conference_2025_26)
@@ -1275,6 +1272,7 @@ final_64_unranked <- bind_rows(auto_locks, at_large_locks, ff_w1, ff_w2, ff_w3, 
 
 ```
 
+Below is the code for the initial simulation of the NCAA Tournament. It includes the top 64 teams, assigns them to their region (East, West, South, Midwest), sets the matchups for the tournament and then will simulate each round and predicts each winner of the games until the end of the tournament and presents the winner.
 
 ```{r}
 
@@ -1722,5 +1720,9 @@ ggplot(head(champ_prob, 10), aes(x = reorder(team, probability), y = probability
 
 ```{r}
 save(espn_mbb_pbp, temp_1, temp_2, games_1, games_2, mbb_2026, mbb_2025, df_elo_25, df_elo_26, conferences_26_clean, schedule_26, ACC_Conference, ACC_final_simulated_elos, ACC_remaining_schedule, A10_Conference, A10_final_simulated_elos, A10_remaining_schedule, B1G_Conference, B1G_final_simulated_elos, B1G_remaining_schedule, MAAC_Conference, MAAC_remaining_schedule, merged_mbb_clean, r64_matchups, season_games, projected_standings, final_elos, ranking_data, tourney_field, team_db_sim, results_list_df, champ_counts, champ_prob, file = "mbb_data_4.rda")
+```
+
+```{r}
+save(espn_mbb_pbp, temp_1, temp_2, games_1, games_2, mbb_2026, mbb_2025, df_elo_25, df_elo_26, conferences_26_clean, schedule_26, ACC_Conference, ACC_final_simulated_elos, ACC_remaining_schedule, A10_Conference, A10_final_simulated_elos, A10_remaining_schedule, B1G_Conference, B1G_final_simulated_elos, B1G_remaining_schedule, MAAC_Conference, MAAC_remaining_schedule, merged_mbb_clean, r64_matchups, season_games, projected_standings, final_elos, ranking_data, tourney_field, team_db_sim, results_list_df, champ_counts, champ_prob, final_64_unranked, conf_split, auto_playin, auto_locks, auto_bid_df, auto_bids, ff_w4, ff_w3, ff_w2, ff_w1, at_large_playin, at_large_locks, at_large_df, all_tourney_results, sim_stepladder_tourney, sim_power_tourney, sim_single_bye_tourney, sim_traditional_tourney, file = "mbb_data_5.rda")
 ```
 
