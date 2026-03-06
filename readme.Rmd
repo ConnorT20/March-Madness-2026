@@ -242,6 +242,7 @@ g_2_MAAC <- ggplot(MAAC_Conference,
 
 g_2_MAAC
 ```
+
 ```{r}
 ACC_Conference <- merged_mbb_clean %>% 
   filter(conference_2025_26 == 'ACC')
@@ -266,6 +267,7 @@ g_3_ACC <- ggplot(ACC_Conference,
 
 g_3_ACC
 ```
+
 ```{r}
 B1G_Conference <- merged_mbb_clean %>% 
   filter(conference_2025_26 == 'Big Ten')
@@ -290,6 +292,7 @@ g_4_B1G <- ggplot(B1G_Conference,
 
 g_4_B1G
 ```
+
 ```{r}
 A10_Conference <- merged_mbb_clean %>% 
   filter(conference_2025_26 == 'Atlantic 10')
@@ -804,7 +807,7 @@ ACC_remaining_schedule <- schedule_26 %>%
     home_team_name = home_location,
     away_team_name = away_location
   ) %>% 
-  # Filter specifically for A10 teams this time!
+  # Filter specifically for ACC teams this time
   filter(home_team_name %in% ACC_Conference$team_name | 
          away_team_name %in% ACC_Conference$team_name) %>%
   select(id, game_date, home_team_name, away_team_name)
@@ -849,7 +852,7 @@ set.seed(33)
 # Generate a random number (0-1) for every game
 ACC_remaining_schedule$sim_value <- runif(nrow(ACC_remaining_schedule))
 
-# Determine the winner: If random number < home_prob, Home wins. Else, Away wins.
+# Determine the winner: If random number < home_prob, Home wins. Else, Away wins
 ACC_remaining_schedule$predicted_winner <- ifelse(
   ACC_remaining_schedule$sim_value < ACC_remaining_schedule$home_prob, 
   ACC_remaining_schedule$home_team_name, 
@@ -863,7 +866,7 @@ head(ACC_remaining_schedule)
 ACC_current_elos <- setNames(ACC_Conference$elo_rating, ACC_Conference$team_name)
 
 # 2. Sort schedule by date
-# It is critical to simulate in order!
+# It is critical to simulate in order
 ACC_remaining_schedule <- ACC_remaining_schedule %>% arrange(game_date)
 
 # 3. Create columns to store results
@@ -960,7 +963,7 @@ WORK WITH MARTIN FOR MORE ACCURATE ELOs
     1485, 1459, 1382, 1299, 1203, 1123, 1084, 1078, 1056, 1015,
     966, 741, 715, 695, 620, 616, 567, 462, 453, 424,
     387, 188, 158, 136, 104
-  )
+  ) / 2
 )
 
 # Print the dataframe to verify
@@ -1065,13 +1068,220 @@ projected_standings <- projected_standings[order(projected_standings$team_elo_re
 
 head(projected_standings)
 ```
+Build out the different conference tournaments. Most tournaments follow one of three types of sturcutes which is reflected in the code chunk below with examples for each.
+
+```{r}
+# --- PREP CONFERENCE DATA ---
+final_standings_conf <- merge(
+  x = projected_standings,
+  y = conferences_26_clean,
+  by.x = "team",
+  by.y = "team",
+  all.x = TRUE
+) %>% 
+  dplyr::rename(elo_rating = team_elo_res) %>%
+  drop_na(conference_2025_26)
+
+# Helper function to simulate a single game
+sim_game <- function(t_a, t_b, conf_data) {
+  prob <- elo.prob(conf_data$elo_rating[conf_data$team == t_a], 
+                   conf_data$elo_rating[conf_data$team == t_b])
+  ifelse(runif(1) < prob, t_a, t_b)
+}
+
+
+# --- THE 4 Tournament Structures for 2026 ---
+
+# Traditional Single-Elimination (No Byes)
+# Handles standard 8-team brackets, and the 4-team Ivy League bracket
+sim_traditional_tourney <- function(conf_data, is_ivy = FALSE) {
+  
+  if(is_ivy) {
+    teams <- conf_data %>% arrange(desc(elo_rating)) %>% head(4)
+    if(nrow(teams) < 4) return(list(Champion = teams$team[1]))
+    
+    # Ivy League is just Semis and Finals
+    sf1 <- sim_game(teams$team[1], teams$team[4], conf_data)
+    sf2 <- sim_game(teams$team[2], teams$team[3], conf_data)
+    champ <- sim_game(sf1, sf2, conf_data)
+    
+    return(list(Semifinals = c(sf1, sf2), Champion = champ))
+  } 
+  
+  else {
+    teams <- conf_data %>% arrange(desc(elo_rating)) %>% head(8)
+    if(nrow(teams) < 8) return(list(Champion = teams$team[1]))
+    
+    # Quarterfinals
+    qf1 <- sim_game(teams$team[1], teams$team[8], conf_data)
+    qf2 <- sim_game(teams$team[4], teams$team[5], conf_data)
+    qf3 <- sim_game(teams$team[3], teams$team[6], conf_data)
+    qf4 <- sim_game(teams$team[2], teams$team[7], conf_data)
+    
+    # Semifinals
+    sf1 <- sim_game(qf1, qf2, conf_data)
+    sf2 <- sim_game(qf3, qf4, conf_data)
+    
+    # Championship
+    champ <- sim_game(sf1, sf2, conf_data)
+    
+    return(list(Quarterfinals = c(qf1, qf2, qf3, qf4), Semifinals = c(sf1, sf2), Champion = champ))
+  }
+}
+
+# 2. Single-Bye Format (Standard Staggered)
+# Top seeds get a bye to Quarter Finals, lower seeds play in R1
+sim_single_bye_tourney <- function(conf_data) {
+  teams <- conf_data %>% arrange(desc(elo_rating)) %>% head(10)
+  if(nrow(teams) < 10) return(list(Champion = teams$team[1])) 
+  
+  # Round 1 (Bottom seeds play-in)
+  r1_g1 <- sim_game(teams$team[8], teams$team[9], conf_data)
+  r1_g2 <- sim_game(teams$team[7], teams$team[10], conf_data)
+  
+  # Quarterfinals (Top seeds + R1 Winners)
+  qf_1 <- sim_game(teams$team[1], r1_g1, conf_data)         
+  qf_2 <- sim_game(teams$team[4], teams$team[5], conf_data) 
+  qf_3 <- sim_game(teams$team[2], r1_g2, conf_data)         
+  qf_4 <- sim_game(teams$team[3], teams$team[6], conf_data) 
+  
+  sf_1 <- sim_game(qf_1, qf_2, conf_data)
+  sf_2 <- sim_game(qf_3, qf_4, conf_data)
+  
+  champ <- sim_game(sf_1, sf_2, conf_data)
+  
+  return(list(Round_1 = c(r1_g1, r1_g2), Quarterfinals = c(qf_1, qf_2, qf_3, qf_4), Semifinals = c(sf_1, sf_2), Champion = champ))
+}
+
+# 3. Double-Bye & Triple-Bye Format (The Power Model)
+# Top 4 seeds jump straight to QF (3 wins to a title). 
+sim_power_tourney <- function(conf_data) {
+  teams <- conf_data %>% arrange(desc(elo_rating)) %>% head(15)
+  if(nrow(teams) < 15) return(list(Champion = teams$team[1]))
+  
+  # Round 1
+  r1_g1 <- sim_game(teams$team[12], teams$team[13], conf_data)
+  r1_g2 <- sim_game(teams$team[11], teams$team[14], conf_data)
+  r1_g3 <- sim_game(teams$team[10], teams$team[15], conf_data)
+  
+  # Round 2
+  r2_g1 <- sim_game(teams$team[8], teams$team[9], conf_data)
+  r2_g2 <- sim_game(teams$team[5], r1_g1, conf_data)
+  r2_g3 <- sim_game(teams$team[6], r1_g2, conf_data)
+  r2_g4 <- sim_game(teams$team[7], r1_g3, conf_data)
+  
+  # Quarterfinals (Top 4 enter here)
+  qf_1 <- sim_game(teams$team[1], r2_g1, conf_data)
+  qf_2 <- sim_game(teams$team[4], r2_g2, conf_data)
+  qf_3 <- sim_game(teams$team[2], r2_g4, conf_data)
+  qf_4 <- sim_game(teams$team[3], r2_g3, conf_data)
+  
+  sf_1 <- sim_game(qf_1, qf_2, conf_data)
+  sf_2 <- sim_game(qf_3, qf_4, conf_data)
+  
+  champ <- sim_game(sf_1, sf_2, conf_data)
+  
+  return(list(Round_1 = c(r1_g1, r1_g2, r1_g3), Round_2 = c(r2_g1, r2_g2, r2_g3, r2_g4), Quarterfinals = c(qf_1, qf_2, qf_3, qf_4), Semifinals = c(sf_1, sf_2), Champion = champ))
+}
+
+# 4. The Stepladder Format (Direct to Semifinals)
+# Top 2 seeds jump straight to SF (2 wins to a title).
+sim_stepladder_tourney <- function(conf_data) {
+  teams <- conf_data %>% arrange(desc(elo_rating)) %>% head(8)
+  if(nrow(teams) < 8) return(list(Champion = teams$team[1])) 
+  
+  # Round 1
+  r1_1 <- sim_game(teams$team[5], teams$team[8], conf_data)
+  r1_2 <- sim_game(teams$team[6], teams$team[7], conf_data)
+  
+  # Quarterfinals
+  qf_1 <- sim_game(teams$team[4], r1_1, conf_data)
+  qf_2 <- sim_game(teams$team[3], r1_2, conf_data)
+  
+  # Semifinals (Top 2 enter here)
+  sf_1 <- sim_game(teams$team[1], qf_1, conf_data)
+  sf_2 <- sim_game(teams$team[2], qf_2, conf_data)
+  
+  champ <- sim_game(sf_1, sf_2, conf_data)
+  
+  return(list(Round_1 = c(r1_1, r1_2), Quarterfinals = c(qf_1, qf_2), Semifinals = c(sf_1, sf_2), Champion = champ))
+}
+
+
+# --- RUN TOURNAMENT SIMULATIONS ---
+
+conf_split <- split(final_standings_conf, final_standings_conf$conference_2025_26)
+auto_bids <- character(0)
+all_tourney_results <- list() 
+
+# Define the groupings 
+stepladder_confs <- c("WCC", "OVC", "Southland")
+power_confs <- c("AAC", "Atlantic 10", "ACC", "Big 12", "CAA", "SEC", "Sun Belt", "Big Ten")
+single_bye_confs <- c("ASUN", "Big East", "Big Sky", "Big South", "Horizon", "MAAC", "MVC", "Mountain West", "Patriot", "SoCon")
+# The remaining conferences default to Traditional Single-Elimination
+
+for(conf_name in names(conf_split)) {
+  conf_data <- conf_split[[conf_name]]
+  
+  # Route to the correct mathematical bracket
+  if(conf_name %in% stepladder_confs) {
+    results <- sim_stepladder_tourney(conf_data)
+  } 
+  else if(conf_name %in% power_confs) {
+    results <- sim_power_tourney(conf_data)
+  } 
+  else if(conf_name %in% single_bye_confs) {
+    results <- sim_single_bye_tourney(conf_data)
+  } 
+  else if(conf_name == "Ivy League") {
+    # Ivy League uses Traditional but only invites 4 teams
+    results <- sim_traditional_tourney(conf_data, is_ivy = TRUE)
+  } 
+  else {
+    # Default: Traditional 8-team bracket
+    results <- sim_traditional_tourney(conf_data, is_ivy = FALSE)
+  }
+  
+  all_tourney_results[[conf_name]] <- results
+  auto_bids <- c(auto_bids, results$Champion)
+}
+
+# --- 4. ASSEMBLE THE BIDS ---
+
+auto_bid_df <- final_standings_conf %>% filter(team %in% auto_bids)
+at_large_df <- final_standings_conf %>% filter(!team %in% auto_bids) %>% arrange(desc(elo_rating)) %>% head(36)
+
+# --- 5. THE FIRST FOUR (PLAY-INS) ---
+
+auto_locks <- head(auto_bid_df %>% arrange(desc(elo_rating)), nrow(auto_bid_df) - 4)
+auto_playin <- tail(auto_bid_df %>% arrange(desc(elo_rating)), 4)
+
+at_large_locks <- head(at_large_df, nrow(at_large_df) - 4)
+at_large_playin <- tail(at_large_df, 4)
+
+play_playin <- function(t1, t2) {
+  prob <- elo.prob(t1$elo_rating, t2$elo_rating)
+  if(runif(1) < prob) return(t1) else return(t2)
+}
+
+ff_w1 <- play_playin(auto_playin[1,], auto_playin[2,])
+ff_w2 <- play_playin(auto_playin[3,], auto_playin[4,])
+ff_w3 <- play_playin(at_large_playin[1,], at_large_playin[2,])
+ff_w4 <- play_playin(at_large_playin[3,], at_large_playin[4,])
+
+
+
+final_64_unranked <- bind_rows(auto_locks, at_large_locks, ff_w1, ff_w2, ff_w3, ff_w4)
+
+```
+
 
 ```{r}
 
-top_64 <- projected_standings %>%
-  arrange(desc(team_elo_res)) %>%
+top_64 <- final_64_unranked %>%
+  arrange(desc(elo_rating)) %>%
   head(64) %>%
-  dplyr::rename(team_name = team, elo_rating = team_elo_res) %>%
+  dplyr::rename(team_name = team) %>%
   mutate(overall_rank = 1:64)
 
 
@@ -1132,7 +1342,7 @@ r64_matchups <- data.frame(
   Elo_B  = team_B$elo_rating
 )
 
-# 4. View the matchups to confirm logic (Check that 1 is playing 16!)
+# 4. View the matchups to confirm logic (Check that 1 is playing 16)
 head(r64_matchups, 10)
 ```
 

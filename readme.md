@@ -54,7 +54,7 @@ progressr::with_progress({
 tictoc::toc()
 ```
 
-    20.271 sec elapsed
+    21.127 sec elapsed
 
 ``` r
 summary(mbb_pbp)
@@ -1621,7 +1621,7 @@ ACC_remaining_schedule <- schedule_26 %>%
     home_team_name = home_location,
     away_team_name = away_location
   ) %>% 
-  # Filter specifically for A10 teams this time!
+  # Filter specifically for ACC teams this time
   filter(home_team_name %in% ACC_Conference$team_name | 
          away_team_name %in% ACC_Conference$team_name) %>%
   select(id, game_date, home_team_name, away_team_name)
@@ -1691,7 +1691,7 @@ set.seed(33)
 # Generate a random number (0-1) for every game
 ACC_remaining_schedule$sim_value <- runif(nrow(ACC_remaining_schedule))
 
-# Determine the winner: If random number < home_prob, Home wins. Else, Away wins.
+# Determine the winner: If random number < home_prob, Home wins. Else, Away wins
 ACC_remaining_schedule$predicted_winner <- ifelse(
   ACC_remaining_schedule$sim_value < ACC_remaining_schedule$home_prob, 
   ACC_remaining_schedule$home_team_name, 
@@ -1717,7 +1717,7 @@ head(ACC_remaining_schedule)
 ACC_current_elos <- setNames(ACC_Conference$elo_rating, ACC_Conference$team_name)
 
 # 2. Sort schedule by date
-# It is critical to simulate in order!
+# It is critical to simulate in order
 ACC_remaining_schedule <- ACC_remaining_schedule %>% arrange(game_date)
 
 # 3. Create columns to store results
@@ -1836,7 +1836,7 @@ BUILD OUT THE TOURNAMENT FIELD WORK WITH MARTIN FOR MORE ACCURATE ELOs
     1485, 1459, 1382, 1299, 1203, 1123, 1084, 1078, 1056, 1015,
     966, 741, 715, 695, 620, 616, 567, 462, 453, 424,
     387, 188, 158, 136, 104
-  )
+  ) / 2
 )
 
 # Print the dataframe to verify
@@ -1844,31 +1844,31 @@ print(ranking_data)
 ```
 
        Rank           Team Points
-    1     1         Purdue   1485
-    2     2        Houston   1459
-    3     3        Florida   1382
-    4     4          UConn   1299
-    5     5     St. John's   1203
-    6     6           Duke   1123
-    7     7       Michigan   1084
-    8     8            BYU   1078
-    9     9       Kentucky   1056
-    10   10     Texas Tech   1015
-    11   11     Louisville    966
-    12   12           UCLA    741
-    13   13        Arizona    715
-    14   14       Arkansas    695
-    15   15        Alabama    620
-    16   16     Iowa State    616
-    17   17       Illinois    567
-    18   18      Tennessee    462
-    19   19         Kansas    453
-    20   20         Auburn    424
-    21   21        Gonzaga    387
-    22   22 Michigan State    188
-    23   23      Creighton    158
-    24   24      Wisconsin    136
-    25   25 North Carolina    104
+    1     1         Purdue  742.5
+    2     2        Houston  729.5
+    3     3        Florida  691.0
+    4     4          UConn  649.5
+    5     5     St. John's  601.5
+    6     6           Duke  561.5
+    7     7       Michigan  542.0
+    8     8            BYU  539.0
+    9     9       Kentucky  528.0
+    10   10     Texas Tech  507.5
+    11   11     Louisville  483.0
+    12   12           UCLA  370.5
+    13   13        Arizona  357.5
+    14   14       Arkansas  347.5
+    15   15        Alabama  310.0
+    16   16     Iowa State  308.0
+    17   17       Illinois  283.5
+    18   18      Tennessee  231.0
+    19   19         Kansas  226.5
+    20   20         Auburn  212.0
+    21   21        Gonzaga  193.5
+    22   22 Michigan State   94.0
+    23   23      Creighton   79.0
+    24   24      Wisconsin   68.0
+    25   25 North Carolina   52.0
 
 ``` r
 season_games <- load_mbb_schedule(2026) %>%
@@ -1891,8 +1891,9 @@ for(i  in 1:nrow(ranking_data)){
 team_vec[which(rownames(team_vec) %in% ranking_data$Team),]
 ```
 
-     [1] 2120 2215 2195 1924 2578 1658 2623 2882 1887 2959 2067 2116 1953 2556 2466
-    [16] 2584 1688 1604 2985 2703 1962 2515 2241 2799 1636
+     [1] 1810.0 1857.5 1847.5 1712.0 2039.0 1579.0 2061.5 2191.0 1693.5 2229.5
+    [11] 1783.5 1808.0 1726.5 2028.0 1983.0 2042.0 1594.0 1552.0 2242.5 2101.5
+    [21] 1731.0 2007.5 1870.5 2149.5 1568.0
 
 ``` r
 team_vals <- team_vec[,1]
@@ -1972,19 +1973,227 @@ projected_standings <- projected_standings[order(projected_standings$team_elo_re
 head(projected_standings)
 ```
 
-        team_elo_res       team
-    244     2818.402    Houston
-    494     2784.492     Purdue
-    645     2761.968      UConn
-    192     2730.503    Florida
-    161     2623.717       Duke
-    582     2582.447 St. John's
+        team_elo_res     team
+    645     2142.860    UConn
+    244     2133.981  Houston
+    161     2100.246     Duke
+    494     2094.236   Purdue
+    192     2083.559  Florida
+    356     2072.666 Michigan
+
+Build out the different conference tournaments. Most tournaments follow
+one of three types of sturcutes which is reflected in the code chunk
+below with examples for each.
 
 ``` r
-top_64 <- projected_standings %>%
-  arrange(desc(team_elo_res)) %>%
+# --- PREP CONFERENCE DATA ---
+final_standings_conf <- merge(
+  x = projected_standings,
+  y = conferences_26_clean,
+  by.x = "team",
+  by.y = "team",
+  all.x = TRUE
+) %>% 
+  dplyr::rename(elo_rating = team_elo_res) %>%
+  drop_na(conference_2025_26)
+
+# Helper function to simulate a single game
+sim_game <- function(t_a, t_b, conf_data) {
+  prob <- elo.prob(conf_data$elo_rating[conf_data$team == t_a], 
+                   conf_data$elo_rating[conf_data$team == t_b])
+  ifelse(runif(1) < prob, t_a, t_b)
+}
+
+
+# --- THE 4 Tournament Structures for 2026 ---
+
+# Traditional Single-Elimination (No Byes)
+# Handles standard 8-team brackets, and the 4-team Ivy League bracket
+sim_traditional_tourney <- function(conf_data, is_ivy = FALSE) {
+  
+  if(is_ivy) {
+    teams <- conf_data %>% arrange(desc(elo_rating)) %>% head(4)
+    if(nrow(teams) < 4) return(list(Champion = teams$team[1]))
+    
+    # Ivy League is just Semis and Finals
+    sf1 <- sim_game(teams$team[1], teams$team[4], conf_data)
+    sf2 <- sim_game(teams$team[2], teams$team[3], conf_data)
+    champ <- sim_game(sf1, sf2, conf_data)
+    
+    return(list(Semifinals = c(sf1, sf2), Champion = champ))
+  } 
+  
+  else {
+    teams <- conf_data %>% arrange(desc(elo_rating)) %>% head(8)
+    if(nrow(teams) < 8) return(list(Champion = teams$team[1]))
+    
+    # Quarterfinals
+    qf1 <- sim_game(teams$team[1], teams$team[8], conf_data)
+    qf2 <- sim_game(teams$team[4], teams$team[5], conf_data)
+    qf3 <- sim_game(teams$team[3], teams$team[6], conf_data)
+    qf4 <- sim_game(teams$team[2], teams$team[7], conf_data)
+    
+    # Semifinals
+    sf1 <- sim_game(qf1, qf2, conf_data)
+    sf2 <- sim_game(qf3, qf4, conf_data)
+    
+    # Championship
+    champ <- sim_game(sf1, sf2, conf_data)
+    
+    return(list(Quarterfinals = c(qf1, qf2, qf3, qf4), Semifinals = c(sf1, sf2), Champion = champ))
+  }
+}
+
+# 2. Single-Bye Format (Standard Staggered)
+# Top seeds get a bye to Quarter Finals, lower seeds play in R1
+sim_single_bye_tourney <- function(conf_data) {
+  teams <- conf_data %>% arrange(desc(elo_rating)) %>% head(10)
+  if(nrow(teams) < 10) return(list(Champion = teams$team[1])) 
+  
+  # Round 1 (Bottom seeds play-in)
+  r1_g1 <- sim_game(teams$team[8], teams$team[9], conf_data)
+  r1_g2 <- sim_game(teams$team[7], teams$team[10], conf_data)
+  
+  # Quarterfinals (Top seeds + R1 Winners)
+  qf_1 <- sim_game(teams$team[1], r1_g1, conf_data)         
+  qf_2 <- sim_game(teams$team[4], teams$team[5], conf_data) 
+  qf_3 <- sim_game(teams$team[2], r1_g2, conf_data)         
+  qf_4 <- sim_game(teams$team[3], teams$team[6], conf_data) 
+  
+  sf_1 <- sim_game(qf_1, qf_2, conf_data)
+  sf_2 <- sim_game(qf_3, qf_4, conf_data)
+  
+  champ <- sim_game(sf_1, sf_2, conf_data)
+  
+  return(list(Round_1 = c(r1_g1, r1_g2), Quarterfinals = c(qf_1, qf_2, qf_3, qf_4), Semifinals = c(sf_1, sf_2), Champion = champ))
+}
+
+# 3. Double-Bye & Triple-Bye Format (The Power Model)
+# Top 4 seeds jump straight to QF (3 wins to a title). 
+sim_power_tourney <- function(conf_data) {
+  teams <- conf_data %>% arrange(desc(elo_rating)) %>% head(15)
+  if(nrow(teams) < 15) return(list(Champion = teams$team[1]))
+  
+  # Round 1
+  r1_g1 <- sim_game(teams$team[12], teams$team[13], conf_data)
+  r1_g2 <- sim_game(teams$team[11], teams$team[14], conf_data)
+  r1_g3 <- sim_game(teams$team[10], teams$team[15], conf_data)
+  
+  # Round 2
+  r2_g1 <- sim_game(teams$team[8], teams$team[9], conf_data)
+  r2_g2 <- sim_game(teams$team[5], r1_g1, conf_data)
+  r2_g3 <- sim_game(teams$team[6], r1_g2, conf_data)
+  r2_g4 <- sim_game(teams$team[7], r1_g3, conf_data)
+  
+  # Quarterfinals (Top 4 enter here)
+  qf_1 <- sim_game(teams$team[1], r2_g1, conf_data)
+  qf_2 <- sim_game(teams$team[4], r2_g2, conf_data)
+  qf_3 <- sim_game(teams$team[2], r2_g4, conf_data)
+  qf_4 <- sim_game(teams$team[3], r2_g3, conf_data)
+  
+  sf_1 <- sim_game(qf_1, qf_2, conf_data)
+  sf_2 <- sim_game(qf_3, qf_4, conf_data)
+  
+  champ <- sim_game(sf_1, sf_2, conf_data)
+  
+  return(list(Round_1 = c(r1_g1, r1_g2, r1_g3), Round_2 = c(r2_g1, r2_g2, r2_g3, r2_g4), Quarterfinals = c(qf_1, qf_2, qf_3, qf_4), Semifinals = c(sf_1, sf_2), Champion = champ))
+}
+
+# 4. The Stepladder Format (Direct to Semifinals)
+# Top 2 seeds jump straight to SF (2 wins to a title).
+sim_stepladder_tourney <- function(conf_data) {
+  teams <- conf_data %>% arrange(desc(elo_rating)) %>% head(8)
+  if(nrow(teams) < 8) return(list(Champion = teams$team[1])) 
+  
+  # Round 1
+  r1_1 <- sim_game(teams$team[5], teams$team[8], conf_data)
+  r1_2 <- sim_game(teams$team[6], teams$team[7], conf_data)
+  
+  # Quarterfinals
+  qf_1 <- sim_game(teams$team[4], r1_1, conf_data)
+  qf_2 <- sim_game(teams$team[3], r1_2, conf_data)
+  
+  # Semifinals (Top 2 enter here)
+  sf_1 <- sim_game(teams$team[1], qf_1, conf_data)
+  sf_2 <- sim_game(teams$team[2], qf_2, conf_data)
+  
+  champ <- sim_game(sf_1, sf_2, conf_data)
+  
+  return(list(Round_1 = c(r1_1, r1_2), Quarterfinals = c(qf_1, qf_2), Semifinals = c(sf_1, sf_2), Champion = champ))
+}
+
+
+# --- RUN TOURNAMENT SIMULATIONS ---
+
+conf_split <- split(final_standings_conf, final_standings_conf$conference_2025_26)
+auto_bids <- character(0)
+all_tourney_results <- list() 
+
+# Define the groupings 
+stepladder_confs <- c("WCC", "OVC", "Southland")
+power_confs <- c("AAC", "Atlantic 10", "ACC", "Big 12", "CAA", "SEC", "Sun Belt", "Big Ten")
+single_bye_confs <- c("ASUN", "Big East", "Big Sky", "Big South", "Horizon", "MAAC", "MVC", "Mountain West", "Patriot", "SoCon")
+# The remaining conferences default to Traditional Single-Elimination
+
+for(conf_name in names(conf_split)) {
+  conf_data <- conf_split[[conf_name]]
+  
+  # Route to the correct mathematical bracket
+  if(conf_name %in% stepladder_confs) {
+    results <- sim_stepladder_tourney(conf_data)
+  } 
+  else if(conf_name %in% power_confs) {
+    results <- sim_power_tourney(conf_data)
+  } 
+  else if(conf_name %in% single_bye_confs) {
+    results <- sim_single_bye_tourney(conf_data)
+  } 
+  else if(conf_name == "Ivy League") {
+    # Ivy League uses Traditional but only invites 4 teams
+    results <- sim_traditional_tourney(conf_data, is_ivy = TRUE)
+  } 
+  else {
+    # Default: Traditional 8-team bracket
+    results <- sim_traditional_tourney(conf_data, is_ivy = FALSE)
+  }
+  
+  all_tourney_results[[conf_name]] <- results
+  auto_bids <- c(auto_bids, results$Champion)
+}
+
+# --- 4. ASSEMBLE THE BIDS ---
+
+auto_bid_df <- final_standings_conf %>% filter(team %in% auto_bids)
+at_large_df <- final_standings_conf %>% filter(!team %in% auto_bids) %>% arrange(desc(elo_rating)) %>% head(36)
+
+# --- 5. THE FIRST FOUR (PLAY-INS) ---
+
+auto_locks <- head(auto_bid_df %>% arrange(desc(elo_rating)), nrow(auto_bid_df) - 4)
+auto_playin <- tail(auto_bid_df %>% arrange(desc(elo_rating)), 4)
+
+at_large_locks <- head(at_large_df, nrow(at_large_df) - 4)
+at_large_playin <- tail(at_large_df, 4)
+
+play_playin <- function(t1, t2) {
+  prob <- elo.prob(t1$elo_rating, t2$elo_rating)
+  if(runif(1) < prob) return(t1) else return(t2)
+}
+
+ff_w1 <- play_playin(auto_playin[1,], auto_playin[2,])
+ff_w2 <- play_playin(auto_playin[3,], auto_playin[4,])
+ff_w3 <- play_playin(at_large_playin[1,], at_large_playin[2,])
+ff_w4 <- play_playin(at_large_playin[3,], at_large_playin[4,])
+
+
+
+final_64_unranked <- bind_rows(auto_locks, at_large_locks, ff_w1, ff_w2, ff_w3, ff_w4)
+```
+
+``` r
+top_64 <- final_64_unranked %>%
+  arrange(desc(elo_rating)) %>%
   head(64) %>%
-  dplyr::rename(team_name = team, elo_rating = team_elo_res) %>%
+  dplyr::rename(team_name = team) %>%
   mutate(overall_rank = 1:64)
 
 
@@ -2021,13 +2230,34 @@ for(r in unique(regions)) {
 print(head(tourney_field))
 ```
 
-       elo_rating   team_name overall_rank region regional_seed
-    1    2818.402     Houston            1   East             1
-    64   1614.236  Cincinnati           64   East            16
-    32   1682.704       Miami           32   East             8
-    33   1675.461        Iowa           33   East             9
-    17   2061.343    Illinois           17   East             5
-    48   1637.014 Santa Clara           48   East            12
+           team_name elo_rating team_id abbreviation     mascot  color
+    1          UConn   2142.860      41         CONN    Huskies 0c2340
+    64         Omaha   1474.947    2437          OMA  Mavericks e3193e
+    32   Saint Louis   1674.657     139          SLU  Billikens 00539C
+    33         Miami   1673.924    2390          MIA Hurricanes 005030
+    17       Gonzaga   1815.239    2250         GONZ   Bulldogs 041e42
+    48 South Alabama   1568.497       6          USA    Jaguars 003E7E
+       alternate_color                                                logo
+    1           f1f2f3   https://a.espncdn.com/i/teamlogos/ncaa/500/41.png
+    64          474648 https://a.espncdn.com/i/teamlogos/ncaa/500/2437.png
+    32          ebebeb  https://a.espncdn.com/i/teamlogos/ncaa/500/139.png
+    33          f47321 https://a.espncdn.com/i/teamlogos/ncaa/500/2390.png
+    17          c8102e https://a.espncdn.com/i/teamlogos/ncaa/500/2250.png
+    48            <NA>    https://a.espncdn.com/i/teamlogos/ncaa/500/6.png
+                                                      logo_dark conference_2025_26
+    1    https://a.espncdn.com/i/teamlogos/ncaa/500-dark/41.png           Big East
+    64 https://a.espncdn.com/i/teamlogos/ncaa/500-dark/2437.png             Summit
+    32  https://a.espncdn.com/i/teamlogos/ncaa/500-dark/139.png        Atlantic 10
+    33 https://a.espncdn.com/i/teamlogos/ncaa/500-dark/2390.png                ACC
+    17 https://a.espncdn.com/i/teamlogos/ncaa/500-dark/2250.png                WCC
+    48    https://a.espncdn.com/i/teamlogos/ncaa/500-dark/6.png           Sun Belt
+       overall_rank region regional_seed
+    1             1   East             1
+    64           64   East            16
+    32           32   East             8
+    33           33   East             9
+    17           17   East             5
+    48           48   East            12
 
 ``` r
 # 1. Grab all "Top" teams in the bracket (Rows 1, 3, 5, etc.)
@@ -2051,21 +2281,21 @@ r64_matchups <- data.frame(
   Elo_B  = team_B$elo_rating
 )
 
-# 4. View the matchups to confirm logic (Check that 1 is playing 16!)
+# 4. View the matchups to confirm logic (Check that 1 is playing 16)
 head(r64_matchups, 10)
 ```
 
-       Region Seed_A     Team_A    Elo_A VS Seed_B         Team_B    Elo_B
-    1    East      1    Houston 2818.402 vs     16     Cincinnati 1614.236
-    2    East      8      Miami 1682.704 vs      9           Iowa 1675.461
-    3    East      5   Illinois 2061.343 vs     12    Santa Clara 1637.014
-    4    East      4       UCLA 2066.437 vs     13     Seton Hall 1636.714
-    5    East      6   Nebraska 1769.402 vs     11 Oklahoma State 1651.767
-    6    East      3        BYU 2374.902 vs     14       Colorado 1623.639
-    7    East      7 Vanderbilt 1740.982 vs     10            SMU 1657.643
-    8    East      2 Texas Tech 2412.875 vs     15      Creighton 1621.677
-    9    West      1     Purdue 2784.492 vs     16   George Mason 1615.675
-    10   West      8 Miami (OH) 1686.036 vs      9    Saint Louis 1675.297
+       Region Seed_A      Team_A    Elo_A VS Seed_B             Team_B    Elo_B
+    1    East      1       UConn 2142.860 vs     16              Omaha 1474.947
+    2    East      8 Saint Louis 1674.657 vs      9              Miami 1673.924
+    3    East      5     Gonzaga 1815.239 vs     12      South Alabama 1568.497
+    4    East      4     Alabama 1843.649 vs     13 California Baptist 1562.950
+    5    East      6      Auburn 1727.204 vs     11  Stephen F. Austin 1637.492
+    6    East      3  Texas Tech 1948.627 vs     14           Columbia 1544.970
+    7    East      7  Vanderbilt 1724.982 vs     10         Utah State 1640.885
+    8    East      2     Arizona 2006.967 vs     15   UC Santa Barbara 1544.404
+    9    West      1     Houston 2133.981 vs     16        New Orleans 1483.526
+    10   West      8     Georgia 1676.855 vs      9       Saint Mary's 1668.721
 
 ``` r
 # --- 1. SETUP & INITIALIZATION ---
@@ -2122,38 +2352,38 @@ for(i in 1:32){
 }
 ```
 
-    Game 01: Houston              def. Cincinnati          
-    Game 02: Miami                def. Iowa                
-    Game 03: Illinois             def. Santa Clara         
-    Game 04: UCLA                 def. Seton Hall          
-    Game 05: Nebraska             def. Oklahoma State      
-    Game 06: BYU                  def. Colorado            
-    Game 07: Vanderbilt           def. SMU                 
-    Game 08: Texas Tech           def. Creighton           
-    Game 09: Purdue               def. George Mason        
-    Game 10: Saint Louis          def. Miami (OH)          
-    Game 11: Tennessee            def. USC                 
-    Game 12: Alabama              def. NC State            
-    Game 13: Indiana              def. North Carolina      
-    Game 14: Arizona              def. Virginia Tech       
-    Game 15: Wisconsin            def. California          
-    Game 16: Michigan             def. Belmont             
-    Game 17: UConn                def. Stanford            
-    Game 18: Georgia              def. Saint Mary's        
-    Game 19: Kansas               def. Stephen F. Austin   
-    Game 20: Iowa State           def. Texas               
-    Game 21: Michigan State       def. Texas A&M           
-    Game 22: Kentucky             def. Akron               
-    Game 23: TCU                  def. Virginia            
-    Game 24: St. John's           def. Yale                
-    Game 25: Florida              def. UNC Wilmington      
-    Game 26: UCF                  def. Missouri            
-    Game 27: Gonzaga              def. Utah State          
-    Game 28: Arkansas             def. McNeese             
-    Game 29: Auburn               def. Ohio State          
-    Game 30: Louisville           def. Baylor              
-    Game 31: Villanova            def. Clemson             
-    Game 32: Duke                 def. High Point          
+    Game 01: UConn                def. Omaha               
+    Game 02: Saint Louis          def. Miami               
+    Game 03: Gonzaga              def. South Alabama       
+    Game 04: Alabama              def. California Baptist  
+    Game 05: Auburn               def. Stephen F. Austin   
+    Game 06: Texas Tech           def. Columbia            
+    Game 07: Vanderbilt           def. Utah State          
+    Game 08: Arizona              def. UC Santa Barbara    
+    Game 09: Houston              def. New Orleans         
+    Game 10: Saint Mary's         def. Georgia             
+    Game 11: Kansas               def. Colorado State      
+    Game 12: Illinois             def. UT Martin           
+    Game 13: Akron                def. North Carolina      
+    Game 14: Iona                 def. BYU                 
+    Game 15: Virginia             def. California          
+    Game 16: St. John's           def. Long Island University
+    Game 17: Duke                 def. Norfolk State       
+    Game 18: UCF                  def. Clemson             
+    Game 19: Tennessee            def. St. Thomas-Minnesota
+    Game 20: Wichita State        def. Arkansas            
+    Game 21: High Point           def. Nebraska            
+    Game 22: Robert Morris        def. Iowa State          
+    Game 23: SMU                  def. Miami (OH)          
+    Game 24: Michigan             def. Mercer              
+    Game 25: Purdue               def. Missouri State      
+    Game 26: Wisconsin            def. Iowa                
+    Game 27: Michigan State       def. Liberty             
+    Game 28: Kentucky             def. Northern Iowa       
+    Game 29: UCLA                 def. UNC Wilmington      
+    Game 30: UMBC                 def. Louisville          
+    Game 31: Villanova            def. Missouri            
+    Game 32: Florida              def. Montana State       
 
 ``` r
 # --- 3. ROUND OF 32 (16 Games) ---
@@ -2192,22 +2422,22 @@ for(i in 1:16){
 }
 ```
 
-    Game 01: Houston              def. Miami               
-    Game 02: UCLA                 def. Illinois            
-    Game 03: BYU                  def. Nebraska            
-    Game 04: Texas Tech           def. Vanderbilt          
-    Game 05: Purdue               def. Saint Louis         
-    Game 06: Alabama              def. Tennessee           
-    Game 07: Arizona              def. Indiana             
-    Game 08: Michigan             def. Wisconsin           
-    Game 09: UConn                def. Georgia             
-    Game 10: Iowa State           def. Kansas              
-    Game 11: Kentucky             def. Michigan State      
-    Game 12: St. John's           def. TCU                 
-    Game 13: Florida              def. UCF                 
-    Game 14: Arkansas             def. Gonzaga             
-    Game 15: Louisville           def. Auburn              
-    Game 16: Duke                 def. Villanova           
+    Game 01: UConn                def. Saint Louis         
+    Game 02: Alabama              def. Gonzaga             
+    Game 03: Texas Tech           def. Auburn              
+    Game 04: Arizona              def. Vanderbilt          
+    Game 05: Houston              def. Saint Mary's        
+    Game 06: Illinois             def. Kansas              
+    Game 07: Akron                def. Iona                
+    Game 08: St. John's           def. Virginia            
+    Game 09: Duke                 def. UCF                 
+    Game 10: Wichita State        def. Tennessee           
+    Game 11: High Point           def. Robert Morris       
+    Game 12: Michigan             def. SMU                 
+    Game 13: Purdue               def. Wisconsin           
+    Game 14: Kentucky             def. Michigan State      
+    Game 15: UCLA                 def. UMBC                
+    Game 16: Florida              def. Villanova           
 
 ``` r
 # --- 4. SWEET 16 (8 Games) ---
@@ -2245,14 +2475,14 @@ for(i in 1:8){
 }
 ```
 
-    Game 1: Houston              def. UCLA                
-    Game 2: Texas Tech           def. BYU                 
-    Game 3: Purdue               def. Alabama             
-    Game 4: Michigan             def. Arizona             
-    Game 5: UConn                def. Iowa State          
-    Game 6: St. John's           def. Kentucky            
-    Game 7: Florida              def. Arkansas            
-    Game 8: Duke                 def. Louisville          
+    Game 1: UConn                def. Alabama             
+    Game 2: Arizona              def. Texas Tech          
+    Game 3: Houston              def. Illinois            
+    Game 4: St. John's           def. Akron               
+    Game 5: Duke                 def. Wichita State       
+    Game 6: Michigan             def. High Point          
+    Game 7: Purdue               def. Kentucky            
+    Game 8: Florida              def. UCLA                
 
 ``` r
 # --- 5. ELITE 8 (4 Games) ---
@@ -2290,10 +2520,10 @@ for(i in 1:4){
 }
 ```
 
-    Region 1: Houston              def. Texas Tech          
-    Region 2: Michigan             def. Purdue              
-    Region 3: UConn                def. St. John's          
-    Region 4: Florida              def. Duke                
+    Region 1: UConn                def. Arizona             
+    Region 2: St. John's           def. Houston             
+    Region 3: Duke                 def. Michigan            
+    Region 4: Purdue               def. Florida             
 
 ``` r
 # --- 6. FINAL FOUR (2 Games) ---
@@ -2331,8 +2561,8 @@ for(i in 1:2){
 }
 ```
 
-    Semi 1: Houston              def. Michigan            
-    Semi 2: UConn                def. Florida             
+    Semi 1: UConn                def. St. John's          
+    Semi 2: Duke                 def. Purdue              
 
 ``` r
 # --- 7. NATIONAL CHAMPIONSHIP (1 Game) ---
@@ -2361,7 +2591,7 @@ if(length(indices) == 2) {
 }
 ```
 
-    CHAMPION: Houston
+    CHAMPION: UConn
 
 ``` r
 # Set number of simulations
@@ -2507,10 +2737,10 @@ print(head(sort(table(results_list_df$champion), decreasing=TRUE), 10))
 ```
 
 
-       Houston      UConn     Purdue    Florida       Duke   Michigan St. John's 
-          3659       2334       1789       1367        362        258        201 
-    Texas Tech    Arizona        BYU 
-            20          4          4 
+         UConn       Duke    Houston     Purdue    Florida   Michigan St. John's 
+          2390       1664       1509       1250        945        774        568 
+       Arizona Texas Tech        BYU 
+           430        136         68 
 
 ``` r
 #use the original 'tourney_field' to get the full list of team names
@@ -2544,16 +2774,16 @@ head(champ_prob, 10)
 ```
 
              team wins probability
-    1     Houston 3659      0.3659
-    33      UConn 2334      0.2334
-    17     Purdue 1789      0.1789
-    49    Florida 1367      0.1367
-    63       Duke  362      0.0362
-    31   Michigan  258      0.0258
-    47 St. John's  201      0.0201
-    15 Texas Tech   20      0.0020
-    11        BYU    4      0.0004
-    27    Arizona    4      0.0004
+    1       UConn 2390      0.2390
+    33       Duke 1664      0.1664
+    17    Houston 1509      0.1509
+    49     Purdue 1250      0.1250
+    63    Florida  945      0.0945
+    47   Michigan  774      0.0774
+    31 St. John's  568      0.0568
+    15    Arizona  430      0.0430
+    11 Texas Tech  136      0.0136
+    27        BYU   68      0.0068
 
 ``` r
 ggplot(head(champ_prob, 10), aes(x = reorder(team, probability), y = probability)) +
@@ -2572,7 +2802,7 @@ ggplot(head(champ_prob, 10), aes(x = reorder(team, probability), y = probability
   )
 ```
 
-![](readme_files/figure-gfm/unnamed-chunk-66-1.png)<!-- -->
+![](readme_files/figure-gfm/unnamed-chunk-67-1.png)<!-- -->
 
 ``` r
 save(espn_mbb_pbp, temp_1, temp_2, games_1, games_2, mbb_2026, mbb_2025, df_elo_25, df_elo_26, conferences_26_clean, schedule_26, ACC_Conference, ACC_final_simulated_elos, ACC_remaining_schedule, A10_Conference, A10_final_simulated_elos, A10_remaining_schedule, B1G_Conference, B1G_final_simulated_elos, B1G_remaining_schedule, MAAC_Conference, MAAC_remaining_schedule, merged_mbb_clean, r64_matchups, season_games, projected_standings, final_elos, ranking_data, tourney_field, team_db_sim, results_list_df, champ_counts, champ_prob, file = "mbb_data_4.rda")
