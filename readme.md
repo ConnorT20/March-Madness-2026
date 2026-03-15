@@ -146,7 +146,7 @@ summary(mbb_2026$period_number)
 ```
 
        Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-       1.00    1.00    2.00    1.53    2.00    5.00 
+      1.000   1.000   2.000   1.531   2.000   5.000 
 
 ``` r
 df_elo_26 <- as.data.frame(final.elos(elo_2026))
@@ -791,7 +791,7 @@ MAAC_Conference[MAAC_Conference$team_name %in% c("Siena", "Saint Peter's"),]
 ```
 
            team_name elo_rating team_id abbreviation   mascot  color
-    12 Saint Peter's   1580.856    2612          SPU Peacocks 004CC2
+    12 Saint Peter's   1565.661    2612          SPU Peacocks 004CC2
     13         Siena   1581.605    2561          SIE   Saints 037961
        alternate_color                                                logo
     12            <NA> https://a.espncdn.com/i/teamlogos/ncaa/500/2612.png
@@ -805,7 +805,7 @@ elo.prob(MAAC_Conference$elo_rating[MAAC_Conference$team_name == "Siena"],
          MAAC_Conference$elo_rating[MAAC_Conference$team_name == "Saint Peter's"])
 ```
 
-    [1] 0.5010771
+    [1] 0.5229289
 
 ``` r
 # Set seed
@@ -820,7 +820,7 @@ sim <- runif(1, min = 0, max = 1)
 print(paste("Siena win probability is:", round(win_prob, 4), sep = " "))
 ```
 
-    [1] "Siena win probability is: 0.5011"
+    [1] "Siena win probability is: 0.5229"
 
 ``` r
 print(paste("The simulated value is:", round(sim, 4), sep = " "))
@@ -852,15 +852,13 @@ MAAC_remaining_schedule <- schedule_26 %>%
 head(MAAC_remaining_schedule)
 ```
 
-    # A tibble: 6 × 4
+    # A tibble: 4 × 4
              id game_date  home_team_name away_team_name  
           <int> <date>     <chr>          <chr>           
-    1 401851464 2026-03-07 Siena          Mount St. Mary's
-    2 401851462 2026-03-07 Quinnipiac     Marist          
-    3 401851460 2026-03-06 Saint Peter's  TBD             
-    4 401851457 2026-03-06 Merrimack      TBD             
-    5 401851456 2026-03-05 Fairfield      Manhattan       
-    6 401851454 2026-03-05 Iona           Sacred Heart    
+    1 401851466 2026-03-08 TBD            Fairfield       
+    2 401851465 2026-03-08 Merrimack      TBD             
+    3 401851464 2026-03-07 Siena          Mount St. Mary's
+    4 401851462 2026-03-07 Quinnipiac     Marist          
 
 ``` r
 MAAC_remaining_schedule <- merge(
@@ -877,15 +875,13 @@ colnames(MAAC_remaining_schedule)[colnames(MAAC_remaining_schedule) == "elo_rati
 MAAC_remaining_schedule
 ```
 
-    # A tibble: 6 × 5
+    # A tibble: 4 × 5
       home_team_name        id game_date  away_team_name   home_elo
       <chr>              <int> <date>     <chr>               <dbl>
-    1 Fairfield      401851456 2026-03-05 Manhattan           1566.
-    2 Iona           401851454 2026-03-05 Sacred Heart        1519.
-    3 Merrimack      401851457 2026-03-06 TBD                 1596.
-    4 Quinnipiac     401851462 2026-03-07 Marist              1545.
-    5 Saint Peter's  401851460 2026-03-06 TBD                 1581.
-    6 Siena          401851464 2026-03-07 Mount St. Mary's    1582.
+    1 Merrimack      401851465 2026-03-08 TBD                 1607.
+    2 Quinnipiac     401851462 2026-03-07 Marist              1545.
+    3 Siena          401851464 2026-03-07 Mount St. Mary's    1582.
+    4 TBD            401851466 2026-03-08 Fairfield             NA 
 
 Adding in the home team elos in the code above. This will help to build
 out the remaining schedule and then to build the game
@@ -904,15 +900,13 @@ colnames(MAAC_remaining_schedule)[colnames(MAAC_remaining_schedule) == "elo_rati
 MAAC_remaining_schedule
 ```
 
-    # A tibble: 6 × 6
+    # A tibble: 4 × 6
       away_team_name   home_team_name        id game_date  home_elo away_elo
       <chr>            <chr>              <int> <date>        <dbl>    <dbl>
-    1 Manhattan        Fairfield      401851456 2026-03-05    1566.    1446.
+    1 Fairfield        TBD            401851466 2026-03-08      NA     1592.
     2 Marist           Quinnipiac     401851462 2026-03-07    1545.    1537.
     3 Mount St. Mary's Siena          401851464 2026-03-07    1582.    1523.
-    4 Sacred Heart     Iona           401851454 2026-03-05    1519.    1473.
-    5 TBD              Merrimack      401851457 2026-03-06    1596.      NA 
-    6 TBD              Saint Peter's  401851460 2026-03-06    1581.      NA 
+    4 TBD              Merrimack      401851465 2026-03-08    1607.      NA 
 
 Getting the win probability and then adding some points to the elo for
 home court advantage
@@ -944,15 +938,13 @@ MAAC_remaining_schedule$predicted_winner <- ifelse(
 head(MAAC_remaining_schedule)
 ```
 
-    # A tibble: 6 × 9
+    # A tibble: 4 × 9
       away_team_name   home_team_name      id game_date  home_elo away_elo home_prob
       <chr>            <chr>            <int> <date>        <dbl>    <dbl>     <dbl>
-    1 Manhattan        Fairfield       4.02e8 2026-03-05    1566.    1446.     0.780
+    1 Fairfield        TBD             4.02e8 2026-03-08      NA     1592.    NA    
     2 Marist           Quinnipiac      4.02e8 2026-03-07    1545.    1537.     0.651
     3 Mount St. Mary's Siena           4.02e8 2026-03-07    1582.    1523.     0.713
-    4 Sacred Heart     Iona            4.02e8 2026-03-05    1519.    1473.     0.698
-    5 TBD              Merrimack       4.02e8 2026-03-06    1596.      NA     NA    
-    6 TBD              Saint Peter's   4.02e8 2026-03-06    1581.      NA     NA    
+    4 TBD              Merrimack       4.02e8 2026-03-08    1607.      NA     NA    
     # ℹ 2 more variables: sim_value <dbl>, predicted_winner <chr>
 
 Here I am looking at the predicted winners of the remaining MAAC
@@ -963,8 +955,8 @@ table(MAAC_remaining_schedule$predicted_winner)
 ```
 
 
-       Fairfield   Quinnipiac Sacred Heart        Siena 
-               1            1            1            1 
+    Quinnipiac      Siena 
+             1          1 
 
 ``` r
 MAAC_current_elos <- setNames(MAAC_Conference$elo_rating, MAAC_Conference$team_name)
@@ -1050,26 +1042,24 @@ head(final_MAAC_simulated_elos)
 ```
 
                team final_elo
-    1     Merrimack  1603.535
-    2         Siena  1590.205
-    3     Fairfield  1572.913
-    4 Saint Peter's  1558.684
-    5        Marist  1556.566
-    6          Iona  1528.001
+    1         Siena  1590.205
+    2     Merrimack  1583.769
+    3     Fairfield  1576.892
+    4 Saint Peter's  1565.661
+    5    Quinnipiac  1555.785
+    6        Marist  1526.566
 
 ``` r
 head(MAAC_remaining_schedule)
 ```
 
-    # A tibble: 6 × 11
+    # A tibble: 4 × 11
       away_team_name   home_team_name      id game_date  home_elo away_elo home_prob
       <chr>            <chr>            <int> <date>        <dbl>    <dbl>     <dbl>
-    1 Manhattan        Fairfield       4.02e8 2026-03-05    1566.    1446.     0.780
-    2 Sacred Heart     Iona            4.02e8 2026-03-05    1519.    1473.     0.698
-    3 TBD              Merrimack       4.02e8 2026-03-06    1596.      NA      0.756
-    4 TBD              Saint Peter's   4.02e8 2026-03-06    1581.      NA      0.739
-    5 Marist           Quinnipiac      4.02e8 2026-03-07    1545.    1537.     0.651
-    6 Mount St. Mary's Siena           4.02e8 2026-03-07    1582.    1523.     0.713
+    1 Marist           Quinnipiac      4.02e8 2026-03-07    1545.    1537.     0.651
+    2 Mount St. Mary's Siena           4.02e8 2026-03-07    1582.    1523.     0.713
+    3 Fairfield        TBD             4.02e8 2026-03-08      NA     1592.     0.512
+    4 TBD              Merrimack       4.02e8 2026-03-08    1607.      NA      0.767
     # ℹ 4 more variables: sim_value <dbl>, predicted_winner <chr>,
     #   home_elo_before <dbl>, away_elo_before <dbl>
 
@@ -1105,14 +1095,14 @@ head(A10_remaining_schedule)
 ```
 
     # A tibble: 6 × 5
-      home_team_name        id game_date  away_team_name    home_elo
-      <chr>              <int> <date>     <chr>                <dbl>
-    1 Dayton         401828462 2026-03-06 VCU                  1646.
-    2 Duquesne       401828464 2026-03-07 Richmond             1527.
-    3 Fordham        401828465 2026-03-07 Rhode Island         1517.
-    4 George Mason   401828466 2026-03-07 Saint Louis          1596.
-    5 Loyola Chicago 401828467 2026-03-07 George Washington    1389.
-    6 Saint Joseph's 401828468 2026-03-07 La Salle             1615.
+      home_team_name         id game_date  away_team_name    home_elo
+      <chr>               <int> <date>     <chr>                <dbl>
+    1 Duquesne        401828464 2026-03-07 Richmond             1527.
+    2 Fordham         401828465 2026-03-07 Rhode Island         1517.
+    3 George Mason    401828466 2026-03-07 Saint Louis          1596.
+    4 Loyola Chicago  401828467 2026-03-07 George Washington    1389.
+    5 Saint Joseph's  401828468 2026-03-07 La Salle             1615.
+    6 St. Bonaventure 401828463 2026-03-07 Davidson             1503.
 
 ``` r
 A10_remaining_schedule <- merge(
@@ -1127,7 +1117,7 @@ colnames(A10_remaining_schedule)[colnames(A10_remaining_schedule) == "elo_rating
 A10_remaining_schedule
 ```
 
-    # A tibble: 7 × 6
+    # A tibble: 6 × 6
       away_team_name    home_team_name         id game_date  home_elo away_elo
       <chr>             <chr>               <int> <date>        <dbl>    <dbl>
     1 Davidson          St. Bonaventure 401828463 2026-03-07    1503.    1568.
@@ -1136,7 +1126,6 @@ A10_remaining_schedule
     4 Rhode Island      Fordham         401828465 2026-03-07    1517.    1523.
     5 Richmond          Duquesne        401828464 2026-03-07    1527.    1477.
     6 Saint Louis       George Mason    401828466 2026-03-07    1596.    1719.
-    7 VCU               Dayton          401828462 2026-03-06    1646.    1685.
 
 ``` r
 A10_remaining_schedule$home_prob <- elo.prob(
@@ -1253,11 +1242,11 @@ head(A10_final_simulated_elos)
 ```
 
                 team A10_final_elo
-    1    Saint Louis      1703.152
-    2            VCU      1672.964
-    3         Dayton      1658.405
-    4   George Mason      1612.237
-    5 Saint Joseph's      1590.247
+    1    Saint Louis      1733.152
+    2            VCU      1698.680
+    3         Dayton      1632.689
+    4 Saint Joseph's      1620.247
+    5   George Mason      1582.237
     6       Davidson      1554.075
 
 ``` r
@@ -1267,12 +1256,12 @@ head(A10_remaining_schedule)
     # A tibble: 6 × 11
       away_team_name    home_team_name     id game_date  home_elo away_elo home_prob
       <chr>             <chr>           <int> <date>        <dbl>    <dbl>     <dbl>
-    1 VCU               Dayton         4.02e8 2026-03-06    1646.    1685.     0.586
-    2 Davidson          St. Bonaventu… 4.02e8 2026-03-07    1503.    1568.     0.551
-    3 George Washington Loyola Chicago 4.02e8 2026-03-07    1389.    1533.     0.437
-    4 La Salle          Saint Joseph's 4.02e8 2026-03-07    1615.    1430.     0.838
-    5 Rhode Island      Fordham        4.02e8 2026-03-07    1517.    1523.     0.632
-    6 Richmond          Duquesne       4.02e8 2026-03-07    1527.    1477.     0.704
+    1 Davidson          St. Bonaventu… 4.02e8 2026-03-07    1503.    1568.     0.551
+    2 George Washington Loyola Chicago 4.02e8 2026-03-07    1389.    1533.     0.437
+    3 La Salle          Saint Joseph's 4.02e8 2026-03-07    1615.    1430.     0.838
+    4 Rhode Island      Fordham        4.02e8 2026-03-07    1517.    1523.     0.632
+    5 Richmond          Duquesne       4.02e8 2026-03-07    1527.    1477.     0.704
+    6 Saint Louis       George Mason   4.02e8 2026-03-07    1596.    1719.     0.467
     # ℹ 4 more variables: sim_value <dbl>, predicted_winner <chr>,
     #   home_elo_before <dbl>, away_elo_before <dbl>
 
@@ -1309,12 +1298,12 @@ head(B1G_remaining_schedule)
     # A tibble: 6 × 5
       home_team_name        id game_date  away_team_name home_elo
       <chr>              <int> <date>     <chr>             <dbl>
-    1 Iowa           401825560 2026-03-05 Michigan          1607.
-    2 Maryland       401825567 2026-03-08 Illinois          1441.
-    3 Michigan       401825568 2026-03-08 Michigan State    1770.
-    4 Michigan State 401825561 2026-03-05 Rutgers           1684.
-    5 Minnesota      401825562 2026-03-07 Northwestern      1519.
-    6 Nebraska       401825569 2026-03-08 Iowa              1690.
+    1 Maryland       401825567 2026-03-08 Illinois          1441.
+    2 Michigan       401825568 2026-03-08 Michigan State    1778.
+    3 Minnesota      401825562 2026-03-07 Northwestern      1519.
+    4 Nebraska       401825569 2026-03-08 Iowa              1690.
+    5 Ohio State     401825563 2026-03-07 Indiana           1593.
+    6 Oregon         401825564 2026-03-07 Washington        1472.
 
 ``` r
 B1G_remaining_schedule <- merge(
@@ -1329,20 +1318,18 @@ colnames(B1G_remaining_schedule)[colnames(B1G_remaining_schedule) == "elo_rating
 B1G_remaining_schedule
 ```
 
-    # A tibble: 11 × 6
-       away_team_name home_team_name        id game_date  home_elo away_elo
-       <chr>          <chr>              <int> <date>        <dbl>    <dbl>
-     1 Illinois       Maryland       401825567 2026-03-08    1441.    1713.
-     2 Indiana        Ohio State     401825563 2026-03-07    1593.    1553.
-     3 Iowa           Nebraska       401825569 2026-03-08    1690.    1607.
-     4 Michigan       Iowa           401825560 2026-03-05    1607.    1770.
-     5 Michigan State Michigan       401825568 2026-03-08    1770.    1684.
-     6 Northwestern   Minnesota      401825562 2026-03-07    1519.    1512.
-     7 Penn State     Rutgers        401825570 2026-03-08    1467.    1451.
-     8 Rutgers        Michigan State 401825561 2026-03-05    1684.    1467.
-     9 UCLA           USC            401825566 2026-03-07    1524.    1625.
-    10 Washington     Oregon         401825564 2026-03-07    1472.    1520.
-    11 Wisconsin      Purdue         401825565 2026-03-07    1648.    1649.
+    # A tibble: 9 × 6
+      away_team_name home_team_name        id game_date  home_elo away_elo
+      <chr>          <chr>              <int> <date>        <dbl>    <dbl>
+    1 Illinois       Maryland       401825567 2026-03-08    1441.    1713.
+    2 Indiana        Ohio State     401825563 2026-03-07    1593.    1553.
+    3 Iowa           Nebraska       401825569 2026-03-08    1690.    1598.
+    4 Michigan State Michigan       401825568 2026-03-08    1778.    1691.
+    5 Northwestern   Minnesota      401825562 2026-03-07    1519.    1512.
+    6 Penn State     Rutgers        401825570 2026-03-08    1460.    1451.
+    7 UCLA           USC            401825566 2026-03-07    1524.    1625.
+    8 Washington     Oregon         401825564 2026-03-07    1472.    1520.
+    9 Wisconsin      Purdue         401825565 2026-03-07    1648.    1649.
 
 ``` r
 B1G_remaining_schedule$home_prob <- elo.prob(
@@ -1373,10 +1360,10 @@ head(B1G_remaining_schedule)
       <chr>          <chr>              <int> <date>        <dbl>    <dbl>     <dbl>
     1 Illinois       Maryland       401825567 2026-03-08    1441.    1713.     0.271
     2 Indiana        Ohio State     401825563 2026-03-07    1593.    1553.     0.692
-    3 Iowa           Nebraska       401825569 2026-03-08    1690.    1607.     0.742
-    4 Michigan       Iowa           401825560 2026-03-05    1607.    1770.     0.410
-    5 Michigan State Michigan       401825568 2026-03-08    1770.    1684.     0.744
-    6 Northwestern   Minnesota      401825562 2026-03-07    1519.    1512.     0.649
+    3 Iowa           Nebraska       401825569 2026-03-08    1690.    1598.     0.751
+    4 Michigan State Michigan       401825568 2026-03-08    1778.    1691.     0.746
+    5 Northwestern   Minnesota      401825562 2026-03-07    1519.    1512.     0.649
+    6 Penn State     Rutgers        401825570 2026-03-08    1460.    1451.     0.652
     # ℹ 2 more variables: sim_value <dbl>, predicted_winner <chr>
 
 ``` r
@@ -1459,12 +1446,12 @@ head(B1G_final_simulated_elos)
 ```
 
                 team B1G_final_elo
-    1       Michigan      1782.086
+    1       Michigan      1778.215
     2       Illinois      1720.914
     3       Nebraska      1689.780
-    4 Michigan State      1677.042
-    5         Purdue      1647.683
-    6           UCLA      1639.730
+    4 Michigan State      1683.368
+    5      Wisconsin      1668.123
+    6         Purdue      1647.683
 
 ``` r
 head(B1G_remaining_schedule)
@@ -1473,12 +1460,12 @@ head(B1G_remaining_schedule)
     # A tibble: 6 × 11
       away_team_name home_team_name        id game_date  home_elo away_elo home_prob
       <chr>          <chr>              <int> <date>        <dbl>    <dbl>     <dbl>
-    1 Michigan       Iowa           401825560 2026-03-05    1607.    1770.     0.410
-    2 Rutgers        Michigan State 401825561 2026-03-05    1684.    1467.     0.862
-    3 Indiana        Ohio State     401825563 2026-03-07    1593.    1553.     0.692
-    4 Northwestern   Minnesota      401825562 2026-03-07    1519.    1512.     0.649
-    5 UCLA           USC            401825566 2026-03-07    1524.    1625.     0.498
-    6 Washington     Oregon         401825564 2026-03-07    1472.    1520.     0.574
+    1 Indiana        Ohio State     401825563 2026-03-07    1593.    1553.     0.692
+    2 Northwestern   Minnesota      401825562 2026-03-07    1519.    1512.     0.649
+    3 UCLA           USC            401825566 2026-03-07    1524.    1625.     0.498
+    4 Washington     Oregon         401825564 2026-03-07    1472.    1520.     0.574
+    5 Wisconsin      Purdue         401825565 2026-03-07    1648.    1649.     0.638
+    6 Illinois       Maryland       401825567 2026-03-08    1441.    1713.     0.271
     # ℹ 4 more variables: sim_value <dbl>, predicted_winner <chr>,
     #   home_elo_before <dbl>, away_elo_before <dbl>
 
@@ -1853,19 +1840,19 @@ head(projected_standings)
 ```
 
         team_elo_res     team
-    645     2142.860    UConn
-    244     2133.981  Houston
-    161     2100.246     Duke
-    494     2094.236   Purdue
-    192     2083.559  Florida
-    356     2072.666 Michigan
+    645     2142.877    UConn
+    244     2134.034  Houston
+    161     2100.360     Duke
+    494     2094.301   Purdue
+    192     2083.622  Florida
+    356     2073.712 Michigan
 
 Build out the different conference tournaments. Most tournaments follow
 one of four types of structures which is reflected in the code chunk
 below with examples for each.
 
 ``` r
-# --- PREP CONFERENCE DATA ---
+# PREP CONFERENCE DATA
 final_standings_conf <- merge(
   x = projected_standings,
   y = conferences_26_clean,
@@ -1883,7 +1870,7 @@ sim_game <- function(t_a, t_b, conf_data) {
   ifelse(runif(1) < prob, t_a, t_b)
 }
 
-# --- THE 4 Tournament Structures for 2026 ---
+# THE 4 TOURNAMENT STRUCTURES FOR 2026 
 
 # Traditional Single-Elimination (No Byes)
 # Handles standard 8-team brackets, and the 4-team Ivy League bracket
@@ -2000,7 +1987,7 @@ sim_stepladder_tourney <- function(conf_data) {
   return(list(Round_1 = c(r1_1, r1_2), Quarterfinals = c(qf_1, qf_2), Semifinals = c(sf_1, sf_2), Champion = champ))
 }
 
-# --- RUN TOURNAMENT SIMULATIONS ---
+# RUN TOURNAMENT SIMULATIONS
 
 conf_split <- split(final_standings_conf, final_standings_conf$conference_2025_26)
 auto_bids <- character(0)
@@ -2038,12 +2025,12 @@ for(conf_name in names(conf_split)) {
   auto_bids <- c(auto_bids, results$Champion)
 }
 
-# --- 4. ASSEMBLE THE BIDS ---
+# 4. ASSEMBLE THE BIDS 
 
 auto_bid_df <- final_standings_conf %>% filter(team %in% auto_bids)
 at_large_df <- final_standings_conf %>% filter(!team %in% auto_bids) %>% arrange(desc(elo_rating)) %>% head(36)
 
-# --- 5. THE FIRST FOUR (PLAY-INS) ---
+# 5. THE FIRST FOUR (PLAY-INS)
 
 auto_locks <- head(auto_bid_df %>% arrange(desc(elo_rating)), nrow(auto_bid_df) - 4)
 auto_playin <- tail(auto_bid_df %>% arrange(desc(elo_rating)), 4)
@@ -2113,27 +2100,27 @@ for(r in unique(regions)) {
 print(head(tourney_field))
 ```
 
-           team_name elo_rating team_id abbreviation     mascot  color
-    1          UConn   2142.860      41         CONN    Huskies 0c2340
-    64         Omaha   1474.947    2437          OMA  Mavericks e3193e
-    32   Saint Louis   1674.657     139          SLU  Billikens 00539C
-    33         Miami   1673.924    2390          MIA Hurricanes 005030
-    17       Gonzaga   1815.239    2250         GONZ   Bulldogs 041e42
-    48 South Alabama   1568.497       6          USA    Jaguars 003E7E
+                team_name elo_rating team_id abbreviation     mascot  color
+    1               UConn   2142.877      41         CONN    Huskies 0c2340
+    64              Omaha   1477.994    2437          OMA  Mavericks e3193e
+    32        Saint Louis   1674.273     139          SLU  Billikens 00539C
+    33              Miami   1673.910    2390          MIA Hurricanes 005030
+    17            Gonzaga   1815.350    2250         GONZ   Bulldogs 041e42
+    48 California Baptist   1566.896    2856          CBU    Lancers 000080
        alternate_color                                                logo
     1           f1f2f3   https://a.espncdn.com/i/teamlogos/ncaa/500/41.png
     64          474648 https://a.espncdn.com/i/teamlogos/ncaa/500/2437.png
     32          ebebeb  https://a.espncdn.com/i/teamlogos/ncaa/500/139.png
     33          f47321 https://a.espncdn.com/i/teamlogos/ncaa/500/2390.png
     17          c8102e https://a.espncdn.com/i/teamlogos/ncaa/500/2250.png
-    48            <NA>    https://a.espncdn.com/i/teamlogos/ncaa/500/6.png
+    48            <NA> https://a.espncdn.com/i/teamlogos/ncaa/500/2856.png
                                                       logo_dark conference_2025_26
     1    https://a.espncdn.com/i/teamlogos/ncaa/500-dark/41.png           Big East
     64 https://a.espncdn.com/i/teamlogos/ncaa/500-dark/2437.png             Summit
     32  https://a.espncdn.com/i/teamlogos/ncaa/500-dark/139.png        Atlantic 10
     33 https://a.espncdn.com/i/teamlogos/ncaa/500-dark/2390.png                ACC
     17 https://a.espncdn.com/i/teamlogos/ncaa/500-dark/2250.png                WCC
-    48    https://a.espncdn.com/i/teamlogos/ncaa/500-dark/6.png           Sun Belt
+    48 https://a.espncdn.com/i/teamlogos/ncaa/500-dark/2856.png                WAC
        overall_rank region regional_seed
     1             1   East             1
     64           64   East            16
@@ -2169,19 +2156,19 @@ head(r64_matchups, 10)
 ```
 
        Region Seed_A      Team_A    Elo_A VS Seed_B             Team_B    Elo_B
-    1    East      1       UConn 2142.860 vs     16              Omaha 1474.947
-    2    East      8 Saint Louis 1674.657 vs      9              Miami 1673.924
-    3    East      5     Gonzaga 1815.239 vs     12      South Alabama 1568.497
-    4    East      4     Alabama 1843.649 vs     13 California Baptist 1562.950
-    5    East      6      Auburn 1727.204 vs     11  Stephen F. Austin 1637.492
-    6    East      3  Texas Tech 1948.627 vs     14           Columbia 1544.970
-    7    East      7  Vanderbilt 1724.982 vs     10         Utah State 1640.885
-    8    East      2     Arizona 2006.967 vs     15   UC Santa Barbara 1544.404
-    9    West      1     Houston 2133.981 vs     16        New Orleans 1483.526
-    10   West      8     Georgia 1676.855 vs      9       Saint Mary's 1668.721
+    1    East      1       UConn 2142.877 vs     16              Omaha 1477.994
+    2    East      8 Saint Louis 1674.273 vs      9              Miami 1673.910
+    3    East      5     Gonzaga 1815.350 vs     12 California Baptist 1566.896
+    4    East      4     Alabama 1843.689 vs     13      South Alabama 1564.229
+    5    East      6      Auburn 1727.413 vs     11  Stephen F. Austin 1637.285
+    6    East      3  Texas Tech 1948.588 vs     14               Iona 1541.852
+    7    East      7  Vanderbilt 1724.821 vs     10         Utah State 1640.916
+    8    East      2     Arizona 2006.802 vs     15           Columbia 1541.354
+    9    West      1     Houston 2134.034 vs     16      Norfolk State 1480.773
+    10   West      8         UCF 1675.673 vs      9       Saint Mary's 1668.856
 
 ``` r
-# --- 1. SETUP & INITIALIZATION ---
+# 1. SETUP & INITIALIZATION 
 
 set.seed(123452033)
 k <- 30
@@ -2196,7 +2183,7 @@ tourney_field$r4_game  <- NA
 tourney_field$r2_game  <- NA
 tourney_field$champion <- NA
 
-# --- 2. ROUND OF 64 (32 Games) ---
+# 2. ROUND OF 64 (32 Games) 
 cat("\n\n=== ROUND OF 64 ===\n")
 ```
 
@@ -2237,39 +2224,39 @@ for(i in 1:32){
 
     Game 01: UConn                def. Omaha               
     Game 02: Saint Louis          def. Miami               
-    Game 03: Gonzaga              def. South Alabama       
-    Game 04: Alabama              def. California Baptist  
+    Game 03: Gonzaga              def. California Baptist  
+    Game 04: Alabama              def. South Alabama       
     Game 05: Auburn               def. Stephen F. Austin   
-    Game 06: Texas Tech           def. Columbia            
+    Game 06: Texas Tech           def. Iona                
     Game 07: Vanderbilt           def. Utah State          
-    Game 08: Arizona              def. UC Santa Barbara    
-    Game 09: Houston              def. New Orleans         
-    Game 10: Saint Mary's         def. Georgia             
+    Game 08: Arizona              def. Columbia            
+    Game 09: Houston              def. Norfolk State       
+    Game 10: Saint Mary's         def. UCF                 
     Game 11: Kansas               def. Colorado State      
-    Game 12: Illinois             def. UT Martin           
+    Game 12: Illinois             def. Wichita State       
     Game 13: Akron                def. North Carolina      
-    Game 14: Iona                 def. BYU                 
+    Game 14: UC Santa Barbara     def. BYU                 
     Game 15: Virginia             def. California          
     Game 16: St. John's           def. Long Island University
-    Game 17: Duke                 def. Norfolk State       
-    Game 18: UCF                  def. Clemson             
-    Game 19: Tennessee            def. St. Thomas-Minnesota
-    Game 20: Wichita State        def. Arkansas            
+    Game 17: Duke                 def. New Orleans         
+    Game 18: Georgia              def. Clemson             
+    Game 19: Michigan State       def. St. Thomas-Minnesota
+    Game 20: UT Martin            def. Arkansas            
     Game 21: High Point           def. Nebraska            
     Game 22: Robert Morris        def. Iowa State          
     Game 23: SMU                  def. Miami (OH)          
     Game 24: Michigan             def. Mercer              
     Game 25: Purdue               def. Missouri State      
     Game 26: Wisconsin            def. Iowa                
-    Game 27: Michigan State       def. Liberty             
-    Game 28: Kentucky             def. Northern Iowa       
+    Game 27: Tennessee            def. Liberty             
+    Game 28: Kentucky             def. Murray State        
     Game 29: UCLA                 def. UNC Wilmington      
     Game 30: UMBC                 def. Louisville          
     Game 31: Villanova            def. Missouri            
-    Game 32: Florida              def. Montana State       
+    Game 32: Florida              def. Idaho               
 
 ``` r
-# --- 3. ROUND OF 32 (16 Games) ---
+# 3. ROUND OF 32 (16 Games) 
 cat("\n\n=== ROUND OF 32 ===\n")
 ```
 
@@ -2311,19 +2298,19 @@ for(i in 1:16){
     Game 04: Arizona              def. Vanderbilt          
     Game 05: Houston              def. Saint Mary's        
     Game 06: Illinois             def. Kansas              
-    Game 07: Akron                def. Iona                
+    Game 07: Akron                def. UC Santa Barbara    
     Game 08: St. John's           def. Virginia            
-    Game 09: Duke                 def. UCF                 
-    Game 10: Wichita State        def. Tennessee           
+    Game 09: Duke                 def. Georgia             
+    Game 10: UT Martin            def. Michigan State      
     Game 11: High Point           def. Robert Morris       
     Game 12: Michigan             def. SMU                 
     Game 13: Purdue               def. Wisconsin           
-    Game 14: Kentucky             def. Michigan State      
+    Game 14: Kentucky             def. Tennessee           
     Game 15: UCLA                 def. UMBC                
     Game 16: Florida              def. Villanova           
 
 ``` r
-# --- 4. SWEET 16 (8 Games) ---
+# 4. SWEET 16 (8 Games) 
 cat("\n\n=== SWEET 16 ===\n")
 ```
 
@@ -2362,13 +2349,13 @@ for(i in 1:8){
     Game 2: Arizona              def. Texas Tech          
     Game 3: Houston              def. Illinois            
     Game 4: St. John's           def. Akron               
-    Game 5: Duke                 def. Wichita State       
+    Game 5: Duke                 def. UT Martin           
     Game 6: Michigan             def. High Point          
     Game 7: Purdue               def. Kentucky            
     Game 8: Florida              def. UCLA                
 
 ``` r
-# --- 5. ELITE 8 (4 Games) ---
+# 5. ELITE 8 (4 Games) 
 cat("\n\n=== ELITE 8 ===\n")
 ```
 
@@ -2409,7 +2396,7 @@ for(i in 1:4){
     Region 4: Purdue               def. Florida             
 
 ``` r
-# --- 6. FINAL FOUR (2 Games) ---
+# 6. FINAL FOUR (2 Games) 
 cat("\n\n=== FINAL FOUR ===\n")
 ```
 
@@ -2448,7 +2435,7 @@ for(i in 1:2){
     Semi 2: Duke                 def. Purdue              
 
 ``` r
-# --- 7. NATIONAL CHAMPIONSHIP (1 Game) ---
+# 7. NATIONAL CHAMPIONSHIP (1 Game) 
 cat("\n\n=== NATIONAL CHAMPIONSHIP ===\n")
 ```
 
@@ -2489,7 +2476,7 @@ results_list <- list()
 # Define K-factor for dynamic Elo updates inside the tournament
 k <- 30
 
-# --- START SIMULATION LOOP ---
+# START SIMULATION LOOP 
 for(s in 1:n_sims){
   
   # 1. Reset team database to initial state using your qualified teams
@@ -2507,7 +2494,7 @@ for(s in 1:n_sims){
   team_db_sim$games_4  <- NA
   team_db_sim$games_2  <- NA
   
-  # --- ROUND 1: Round of 64 (32 Games) ---
+  # ROUND 1: Round of 64 (32 Games) 
   for(i in 1:32){
     match_teams <- team_db_sim[which(team_db_sim$games_64 == i),]
     
@@ -2529,7 +2516,7 @@ for(s in 1:n_sims){
     }
   }
   
-  # --- ROUND 2: Round of 32 (16 Games) ---
+  # ROUND 2: Round of 32 (16 Games) 
   for(i in 1:16){
     match_teams <- team_db_sim[which(team_db_sim$games_32 == i),]
     
@@ -2546,7 +2533,7 @@ for(s in 1:n_sims){
     }
   }
   
-  # --- ROUND 3: Sweet 16 (8 Games) ---
+  # ROUND 3: Sweet 16 (8 Games) 
   for(i in 1:8){
     match_teams <- team_db_sim[which(team_db_sim$games_16 == i),]
     
@@ -2563,7 +2550,7 @@ for(s in 1:n_sims){
     }
   }
 
-  # --- ROUND 4: Elite 8 (4 Games) ---
+  # ROUND 4: Elite 8 (4 Games) 
   for(i in 1:4){
     match_teams <- team_db_sim[which(team_db_sim$games_8 == i),]
     
@@ -2580,7 +2567,7 @@ for(s in 1:n_sims){
     }
   }
   
-  # --- ROUND 5: Final Four (2 Games) ---
+  # ROUND 5: Final Four (2 Games) 
   for(i in 1:2){
     match_teams <- team_db_sim[which(team_db_sim$games_4 == i),]
     
@@ -2597,7 +2584,7 @@ for(s in 1:n_sims){
     }
   }
   
-  # --- ROUND 6: Championship (1 Game) ---
+  # ROUND 6: Championship (1 Game) 
   match_teams <- team_db_sim[which(team_db_sim$games_2 == 1),]
   if(nrow(match_teams) == 2) {
       prob <- elo.prob(match_teams$elo_rating[1], match_teams$elo_rating[2])
@@ -2621,9 +2608,9 @@ print(head(sort(table(results_list_df$champion), decreasing=TRUE), 10))
 
 
          UConn       Duke    Houston     Purdue    Florida   Michigan St. John's 
-          2390       1664       1509       1250        945        774        568 
+          2387       1668       1511       1253        941        776        568 
        Arizona Texas Tech        BYU 
-           430        136         68 
+           427        136         68 
 
 ``` r
 #use the original 'tourney_field' to get the full list of team names
@@ -2657,14 +2644,14 @@ head(champ_prob, 10)
 ```
 
              team wins probability
-    1       UConn 2390      0.2390
-    33       Duke 1664      0.1664
-    17    Houston 1509      0.1509
-    49     Purdue 1250      0.1250
-    63    Florida  945      0.0945
-    47   Michigan  774      0.0774
+    1       UConn 2387      0.2387
+    33       Duke 1668      0.1668
+    17    Houston 1511      0.1511
+    49     Purdue 1253      0.1253
+    63    Florida  941      0.0941
+    47   Michigan  776      0.0776
     31 St. John's  568      0.0568
-    15    Arizona  430      0.0430
+    15    Arizona  427      0.0427
     11 Texas Tech  136      0.0136
     27        BYU   68      0.0068
 

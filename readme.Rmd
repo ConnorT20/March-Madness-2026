@@ -1070,7 +1070,7 @@ head(projected_standings)
 Build out the different conference tournaments. Most tournaments follow one of four types of structures which is reflected in the code chunk below with examples for each.
 
 ```{r}
-# --- PREP CONFERENCE DATA ---
+# PREP CONFERENCE DATA
 final_standings_conf <- merge(
   x = projected_standings,
   y = conferences_26_clean,
@@ -1088,7 +1088,7 @@ sim_game <- function(t_a, t_b, conf_data) {
   ifelse(runif(1) < prob, t_a, t_b)
 }
 
-# --- THE 4 Tournament Structures for 2026 ---
+# THE 4 TOURNAMENT STRUCTURES FOR 2026 
 
 # Traditional Single-Elimination (No Byes)
 # Handles standard 8-team brackets, and the 4-team Ivy League bracket
@@ -1205,7 +1205,7 @@ sim_stepladder_tourney <- function(conf_data) {
   return(list(Round_1 = c(r1_1, r1_2), Quarterfinals = c(qf_1, qf_2), Semifinals = c(sf_1, sf_2), Champion = champ))
 }
 
-# --- RUN TOURNAMENT SIMULATIONS ---
+# RUN TOURNAMENT SIMULATIONS
 
 conf_split <- split(final_standings_conf, final_standings_conf$conference_2025_26)
 auto_bids <- character(0)
@@ -1243,12 +1243,12 @@ for(conf_name in names(conf_split)) {
   auto_bids <- c(auto_bids, results$Champion)
 }
 
-# --- 4. ASSEMBLE THE BIDS ---
+# 4. ASSEMBLE THE BIDS 
 
 auto_bid_df <- final_standings_conf %>% filter(team %in% auto_bids)
 at_large_df <- final_standings_conf %>% filter(!team %in% auto_bids) %>% arrange(desc(elo_rating)) %>% head(36)
 
-# --- 5. THE FIRST FOUR (PLAY-INS) ---
+# 5. THE FIRST FOUR (PLAY-INS)
 
 auto_locks <- head(auto_bid_df %>% arrange(desc(elo_rating)), nrow(auto_bid_df) - 4)
 auto_playin <- tail(auto_bid_df %>% arrange(desc(elo_rating)), 4)
@@ -1346,7 +1346,7 @@ head(r64_matchups, 10)
 
 ```{r}
 
-# --- 1. SETUP & INITIALIZATION ---
+# 1. SETUP & INITIALIZATION 
 
 set.seed(123452033)
 k <- 30
@@ -1361,7 +1361,7 @@ tourney_field$r4_game  <- NA
 tourney_field$r2_game  <- NA
 tourney_field$champion <- NA
 
-# --- 2. ROUND OF 64 (32 Games) ---
+# 2. ROUND OF 64 (32 Games) 
 cat("\n\n=== ROUND OF 64 ===\n")
 
 for(i in 1:32){
@@ -1393,7 +1393,7 @@ for(i in 1:32){
   tourney_field$r32_game[winner_idx] <- ceiling(i / 2)
 }
 
-# --- 3. ROUND OF 32 (16 Games) ---
+# 3. ROUND OF 32 (16 Games) 
 cat("\n\n=== ROUND OF 32 ===\n")
 
 for(i in 1:16){
@@ -1422,7 +1422,7 @@ for(i in 1:16){
   }
 }
 
-# --- 4. SWEET 16 (8 Games) ---
+# 4. SWEET 16 (8 Games) 
 cat("\n\n=== SWEET 16 ===\n")
 
 for(i in 1:8){
@@ -1450,7 +1450,7 @@ for(i in 1:8){
   }
 }
 
-# --- 5. ELITE 8 (4 Games) ---
+# 5. ELITE 8 (4 Games) 
 cat("\n\n=== ELITE 8 ===\n")
 
 for(i in 1:4){
@@ -1478,7 +1478,7 @@ for(i in 1:4){
   }
 }
 
-# --- 6. FINAL FOUR (2 Games) ---
+# 6. FINAL FOUR (2 Games) 
 cat("\n\n=== FINAL FOUR ===\n")
 
 for(i in 1:2){
@@ -1506,7 +1506,7 @@ for(i in 1:2){
   }
 }
 
-# --- 7. NATIONAL CHAMPIONSHIP (1 Game) ---
+# 7. NATIONAL CHAMPIONSHIP (1 Game) 
 cat("\n\n=== NATIONAL CHAMPIONSHIP ===\n")
 
 indices <- which(tourney_field$r2_game == 1)
@@ -1539,7 +1539,7 @@ results_list <- list()
 # Define K-factor for dynamic Elo updates inside the tournament
 k <- 30
 
-# --- START SIMULATION LOOP ---
+# START SIMULATION LOOP 
 for(s in 1:n_sims){
   
   # 1. Reset team database to initial state using your qualified teams
@@ -1557,7 +1557,7 @@ for(s in 1:n_sims){
   team_db_sim$games_4  <- NA
   team_db_sim$games_2  <- NA
   
-  # --- ROUND 1: Round of 64 (32 Games) ---
+  # ROUND 1: Round of 64 (32 Games) 
   for(i in 1:32){
     match_teams <- team_db_sim[which(team_db_sim$games_64 == i),]
     
@@ -1579,7 +1579,7 @@ for(s in 1:n_sims){
     }
   }
   
-  # --- ROUND 2: Round of 32 (16 Games) ---
+  # ROUND 2: Round of 32 (16 Games) 
   for(i in 1:16){
     match_teams <- team_db_sim[which(team_db_sim$games_32 == i),]
     
@@ -1596,7 +1596,7 @@ for(s in 1:n_sims){
     }
   }
   
-  # --- ROUND 3: Sweet 16 (8 Games) ---
+  # ROUND 3: Sweet 16 (8 Games) 
   for(i in 1:8){
     match_teams <- team_db_sim[which(team_db_sim$games_16 == i),]
     
@@ -1613,7 +1613,7 @@ for(s in 1:n_sims){
     }
   }
 
-  # --- ROUND 4: Elite 8 (4 Games) ---
+  # ROUND 4: Elite 8 (4 Games) 
   for(i in 1:4){
     match_teams <- team_db_sim[which(team_db_sim$games_8 == i),]
     
@@ -1630,7 +1630,7 @@ for(s in 1:n_sims){
     }
   }
   
-  # --- ROUND 5: Final Four (2 Games) ---
+  # ROUND 5: Final Four (2 Games) 
   for(i in 1:2){
     match_teams <- team_db_sim[which(team_db_sim$games_4 == i),]
     
@@ -1647,7 +1647,7 @@ for(s in 1:n_sims){
     }
   }
   
-  # --- ROUND 6: Championship (1 Game) ---
+  # ROUND 6: Championship (1 Game) 
   match_teams <- team_db_sim[which(team_db_sim$games_2 == 1),]
   if(nrow(match_teams) == 2) {
       prob <- elo.prob(match_teams$elo_rating[1], match_teams$elo_rating[2])
